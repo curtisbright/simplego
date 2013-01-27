@@ -95,7 +95,7 @@ MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0),
 	
 	timer = new wxTimer();
 	timer->SetOwner(this);
-	timer->Start(10);
+	//timer->Start(5);
 }
 
 void MainPanel::OnTimer(wxTimerEvent& event)
@@ -108,8 +108,9 @@ void MainPanel::OnTimer(wxTimerEvent& event)
 		makemove(x, y);
 		count++;
 		//printf("attempt %d\n", count);
-		if(count>1000)
-		{	timer->Stop();
+		if(count>3000)
+		{	//timer->Stop();
+			turn = (turn+1)%2;
 			break;
 		}
 	}
@@ -223,7 +224,7 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 }
 
 void MainPanel::makemove(int x, int y)
-{	printf("makemove(%d, %d)\n", x, y);
+{	//printf("makemove(%d, %d)\n", x, y);
 	if(x<0 || x>18 || y<0 || y>18)
 		return;
 	wxClientDC dc(this);
@@ -231,20 +232,21 @@ void MainPanel::makemove(int x, int y)
 	memcpy(temp, board, sizeof(temp));
 	if(board[x][y]==0)
 	{	temp[x][y] = (turn+1)%2+1;
+		int colour = temp[x][y];
 		bool haslib = hasliberties(temp, x, y);
 		bool lefthaslib = hasliberties(temp, x-1, y);
 		bool righthaslib = hasliberties(temp, x+1, y);
 		bool downhaslib = hasliberties(temp, x, y-1);
 		bool uphaslib = hasliberties(temp, x, y+1);
 	
-		if(haslib || (x>0 && !lefthaslib) || (x<18 && !righthaslib) || (y>0 && !downhaslib) || (y<18 && !uphaslib))
-		{	if(!lefthaslib)
+		if(haslib || (x>0 && !lefthaslib && temp[x-1][y]!=colour) || (x<18 && !righthaslib && temp[x+1][y]!=colour) || (y>0 && !downhaslib && temp[x][y-1]!=colour) || (y<18 && !uphaslib && temp[x][y+1]!=colour))
+		{	if(!lefthaslib && temp[x-1][y]!=colour)
 				removegroup(temp, x-1, y);
-			if(!righthaslib)
+			if(!righthaslib && temp[x+1][y]!=colour)
 				removegroup(temp, x+1, y);
-			if(!downhaslib)
+			if(!downhaslib && temp[x][y-1]!=colour)
 				removegroup(temp, x, y-1);
-			if(!uphaslib)
+			if(!uphaslib && temp[x][y+1]!=colour)
 				removegroup(temp, x, y+1);
 				
 			bool dupe = false;
