@@ -2,7 +2,9 @@
 
 //int x, y;
 int turn;
+int move;
 int board[19][19];
+int history[1000][19][19];
 
 wxButton* PassButton;
 //wxTextCtrl* Depth1Text;
@@ -202,19 +204,31 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 		                            || (x<18 && !hasliberties(temp, x+1, y))
 		                            || (y>1 && !hasliberties(temp, x, y-1))
 		                            || (y<18 && !hasliberties(temp, x, y+1)))
-		{	turn = (turn+1)%2;
-			board[x][y] = turn+1;
-			DrawStone(dc, x, y, turn+1);
-			if(x>1 && !hasliberties(board, x-1, y))
-				removegroup(board, x-1, y);
-			if(x<18 && !hasliberties(board, x+1, y))
-				removegroup(board, x+1, y);
-			if(y>1 && !hasliberties(board, x, y-1))
-				removegroup(board, x, y-1);
-			if(y<18 && !hasliberties(board, x, y+1))
-				removegroup(board, x, y+1);
-			if(memcmp(temp, board, sizeof(temp)))
-				DrawBoard(dc);
+		{	if(x>1 && !hasliberties(temp, x-1, y))
+				removegroup(temp, x-1, y);
+			if(x<18 && !hasliberties(temp, x+1, y))
+				removegroup(temp, x+1, y);
+			if(y>1 && !hasliberties(temp, x, y-1))
+				removegroup(temp, x, y-1);
+			if(y<18 && !hasliberties(temp, x, y+1))
+				removegroup(temp, x, y+1);
+				
+			bool dupe = false;
+			for(int i=0; i<move; i++)
+				if(memcmp(temp, history[i], sizeof(temp))==0)
+					dupe = true;
+			
+			if(dupe==false)
+			{	turn = (turn+1)%2;
+				board[x][y] = turn+1;
+				DrawStone(dc, x, y, turn+1);
+				if(memcmp(temp, board, sizeof(temp)))
+				{	boardcpy(board, temp);
+					DrawBoard(dc);
+				}
+				boardcpy(history[move], board);
+				move++;
+			}
 		}
 	}
 	printboard(board);
@@ -228,6 +242,7 @@ bool MyApp::OnInit()
 	x = rand()%19;
 	y = rand()%19;*/
 	turn = 1;
+	move = 0;
 	for(int i=0; i<19; i++)
 		for(int j=0; j<19; j++)
 			board[i][j] = 0;
