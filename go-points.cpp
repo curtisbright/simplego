@@ -4,7 +4,7 @@
 int turn;
 int board[19][19];
 
-//wxButton* AIButton;
+wxButton* PassButton;
 //wxTextCtrl* Depth1Text;
 
 /*wxString pointname()
@@ -87,7 +87,7 @@ public:
 
 MainPanel* panel;
 
-MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(336, 336), wxTAB_TRAVERSAL, _T("panel"))
+MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(325, 325), wxTAB_TRAVERSAL, _T("panel"))
 {		
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(MainPanel::LMouseUp));
@@ -152,7 +152,7 @@ class MyApp : public wxApp
 class MainFrame : public wxFrame
 {	
 private:
-	//void RunAI(wxCommandEvent& event);
+	void Pass(wxCommandEvent& event);
 	void OnEnter(wxCommandEvent& event);
 
 public:
@@ -162,8 +162,8 @@ public:
 MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size) : wxFrame(NULL, -1, title, pos, size)
 {	panel = new MainPanel(this);
 
-	//AIButton = new wxButton(this, wxID_HIGHEST+1, _T("OK"), wxPoint(150, 350));
-	//Connect(wxID_HIGHEST+1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::RunAI));
+	PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"), wxPoint(125, 325));
+	Connect(wxID_HIGHEST+1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::Pass));
 	
 	//Depth1Text = new wxTextCtrl(this, wxID_HIGHEST+2, _T(""), wxPoint(25, 350), wxDefaultSize, wxTE_PROCESS_ENTER);
 	//Connect(wxID_HIGHEST+2, wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(MainFrame::OnEnter));
@@ -183,22 +183,9 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Refresh();
 }*/
 
-/*void MainFrame::RunAI(wxCommandEvent& WXUNUSED(event))
-{	//wxMessageBox(_("This is a wxWidgets Hello world sample"), _("About Hello World"), wxOK | wxICON_INFORMATION, this);
-
-	//long depth1, depth2;
-	//Depth1Text->GetValue().ToLong(&depth1);
-	//Depth2Text->GetValue().ToLong(&depth2);
-	
-	if(Depth1Text->GetValue().Cmp(pointname())!=0)
-		wxMessageBox(pointname(), _("Wrong"), wxOK | wxICON_INFORMATION, this);
-	
-	x = rand()%19;
-	y = rand()%19;
-	Depth1Text->SetValue("");
-	
-	Refresh();
-}*/
+void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
+{	turn = (turn+1)%2;
+}
 
 void MainPanel::LMouseUp(wxMouseEvent& event)
 {	int x, y;
@@ -235,7 +222,7 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 
 bool MyApp::OnInit()
 {
-	frame = new MainFrame(wxT("Go Points"), wxPoint(-1, -1), wxSize(350, 350));
+	frame = new MainFrame(wxT("Go Points"), wxPoint(-1, -1), wxSize(350, 400));
 	/*x = 0;
 	y = 18;
 	x = rand()%19;
