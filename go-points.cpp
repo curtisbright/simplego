@@ -4,7 +4,7 @@
 int turn;
 int move;
 int board[19][19];
-int history[1000][19][19];
+int (*history)[19][19];
 
 wxButton* PassButton;
 //wxTextCtrl* Depth1Text;
@@ -226,12 +226,14 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 				{	boardcpy(board, temp);
 					DrawBoard(dc);
 				}
+				history = (int(*)[19][19])realloc(history, (move+1)*sizeof(int[19][19]));
 				boardcpy(history[move], board);
 				move++;
+				printf("Move %d:\n", move);
+				printboard(board);
 			}
 		}
 	}
-	printboard(board);
 }
 
 bool MyApp::OnInit()
@@ -243,6 +245,7 @@ bool MyApp::OnInit()
 	y = rand()%19;*/
 	turn = 1;
 	move = 0;
+	history = NULL;
 	for(int i=0; i<19; i++)
 		for(int j=0; j<19; j++)
 			board[i][j] = 0;
