@@ -7,7 +7,10 @@ char board[21][21];
 char (*history)[21][21];
 
 wxButton* PassButton;
+wxButton* RandomButton;
+wxButton* NewButton;
 wxStaticText* TurnText;
+wxStaticText* MoveText;
 
 /*wxString pointname()
 {	wxString output = "";
@@ -84,7 +87,7 @@ public:
 
 MainPanel* panel;
 
-MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 50), wxSize(312, 312), wxTAB_TRAVERSAL, _T("panel"))
+MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(312, 312), wxTAB_TRAVERSAL, _T("panel"))
 {		
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(MainPanel::LMouseUp));
@@ -167,20 +170,41 @@ class MainFrame : public wxFrame
 {	
 private:
 	void Pass(wxCommandEvent& event);
+	void Random(wxCommandEvent& event);
 	void OnEnter(wxCommandEvent& event);
+	void NewGame(wxCommandEvent& event);
 
 public:
 	MainPanel* panel;
-	MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+	MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
 };
 
-MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size) : wxFrame(NULL, -1, title, pos, size)
+MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(NULL, -1, title, pos, size, style)
 {	panel = new MainPanel(this);
-
-	PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"), wxPoint(125, 0));
-	Connect(wxID_HIGHEST+1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::Pass));
+	wxFlexGridSizer* goSizer = new wxFlexGridSizer(1, 2, 0, 0);
+	wxBoxSizer* descriptionSizer = new wxBoxSizer(wxVERTICAL);
 	
-	TurnText = new wxStaticText(this, wxID_ANY, _T("Black to play"), wxPoint(0, 0));
+	goSizer->Add(descriptionSizer, 1, wxBOTTOM|wxRIGHT, 5);
+	goSizer->Add(panel, 1, wxBOTTOM|wxRIGHT, 5);
+	
+	TurnText = new wxStaticText(this, wxID_ANY, _T("Turn: Black"));
+	MoveText = new wxStaticText(this, wxID_ANY, _T("Move: 0"));
+	PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"));
+	RandomButton = new wxButton(this, wxID_HIGHEST+2, _T("Random!"));
+	NewButton = new wxButton(this, wxID_HIGHEST+3, _T("New Game"));
+	
+	descriptionSizer->Add(TurnText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(MoveText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(PassButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(RandomButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(NewButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	this->SetSizer(goSizer);
+	goSizer->Fit(this);
+	
+	Connect(wxID_HIGHEST+1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::Pass));
+	Connect(wxID_HIGHEST+2, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::Random));
+	Connect(wxID_HIGHEST+3, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::NewGame));
+	
 	//Depth1Text = new wxTextCtrl(this, wxID_HIGHEST+2, _T(""), wxPoint(25, 350), wxDefaultSize, wxTE_PROCESS_ENTER);
 	//Connect(wxID_HIGHEST+2, wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(MainFrame::OnEnter));
 }
@@ -202,9 +226,11 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 {	turn = (turn+1)%2;
 	if(turn==0)
-		TurnText->SetLabel("White to play");
+		TurnText->SetLabel("Turn: White");
 	else
-		TurnText->SetLabel("Black to play");
+		TurnText->SetLabel("Turn: Black");
+	movenum++;
+	MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
 	/*int x, y, count;
 	for(int i=0; i<25; i++)
 	{	int origmove = move;
@@ -219,6 +245,36 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 		}
 		printf("attempts: %d\n", count);
 	}*/
+}
+
+void MainFrame::Random(wxCommandEvent& WXUNUSED(event))
+{	if(panel->timer->IsRunning())
+		panel->timer->Stop();
+	else
+		panel->timer->Start(5);
+}
+
+void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
+{	turn = 1;
+	movenum = 0;
+	boardsize = 19;
+	if(history!=NULL)
+	{	free(history);
+		history = NULL;
+	}
+	for(int i=0; i<21; i++)
+		for(int j=0; j<21; j++)
+			board[i][j] = 0;
+			
+	for(int i=0; i<21; i++)
+	{	board[i][0] = 3;
+		board[i][boardsize+1] = 3;
+		board[0][i] = 3;
+		board[boardsize+1][i] = 3;
+	}
+	
+	wxClientDC dc(panel);
+	panel->DrawBoard(dc);
 }
 
 void MainPanel::makemove(int x, int y)
@@ -264,11 +320,12 @@ void MainPanel::makemove(int x, int y)
 				movenum++;
 				printf("Move %d:\n", movenum);
 				printboard(board, x, y);
+				MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
 				
 				if(turn==0)
-					TurnText->SetLabel("White to play");
+					TurnText->SetLabel("Turn: White");
 				else
-					TurnText->SetLabel("Black to play");
+					TurnText->SetLabel("Turn: Black");
 			}
 		}
 	}
@@ -276,8 +333,8 @@ void MainPanel::makemove(int x, int y)
 
 void MainPanel::LMouseUp(wxMouseEvent& event)
 {	int x, y;
-	x = 1+(event.GetPosition().x-8)/16;
-	y = 1+(event.GetPosition().y-8)/16;
+	x = (event.GetPosition().x+8)/16;
+	y = (event.GetPosition().y+8)/16;
 	makemove(x, y);
 }
 
@@ -298,7 +355,7 @@ bool MyApp::OnInit()
 		board[boardsize+1][i] = 3;
 	}
 	
-	frame = new MainFrame(wxT("Go Points"), wxPoint(-1, -1), wxSize(350, 400));
+	frame = new MainFrame(wxT("Simple Go"), wxPoint(-1, -1), wxSize(-1, -1), wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER);
 	
 	frame->Show();
 	SetTopWindow(frame);
