@@ -1,12 +1,13 @@
 #include "wx/wx.h"
 
-//int x, y;
-int turn;
-int move;
-int board[19][19];
-int (*history)[19][19];
+int movenum;
+int boardsize;
+char turn;
+char board[21][21];
+char (*history)[21][21];
 
 wxButton* PassButton;
+wxStaticText* TurnText;
 
 /*wxString pointname()
 {	wxString output = "";
@@ -15,9 +16,9 @@ wxButton* PassButton;
 	return output;
 }*/
 
-void printboard(int board[19][19], int x, int y)
-{	for(int j=0; j<19; j++)
-	{	for(int i=0; i<19; i++)
+void printboard(char board[21][21], int x, int y)
+{	for(int j=0; j<21; j++)
+	{	for(int i=0; i<21; i++)
 		{	//if(i==x && j==y)
 			//	printf("*");
 			if(board[i][j]==0)
@@ -34,40 +35,36 @@ void printboard(int board[19][19], int x, int y)
 	printf("\n");
 }
 
-void removegroup(int board[19][19], int x, int y)
-{	if(x<0 || x>18 || y<0 || y>18)
-		return;
-	int colour = board[x][y];
+void removegroup(char board[21][21], int x, int y)
+{	int colour = board[x][y];
 	if(colour==0)
 		return;
 	board[x][y] = 0;
-	if(x>0 && board[x-1][y]==colour)
+	if(board[x-1][y]==colour)
 		removegroup(board, x-1, y);
-	if(x<18 && board[x+1][y]==colour)
+	if(board[x+1][y]==colour)
 		removegroup(board, x+1, y);
-	if(y>0 && board[x][y-1]==colour)
+	if(board[x][y-1]==colour)
 		removegroup(board, x, y-1);
-	if(y<18 && board[x][y+1]==colour)
+	if(board[x][y+1]==colour)
 		removegroup(board, x, y+1);
 }
 
-bool haslibertiesrec(int board[19][19], int x, int y)
-{	if((x>0 && board[x-1][y]==0) || (y>0 && board[x][y-1]==0) || (x<18 && board[x+1][y]==0) || (y<18 && board[x][y+1]==0))
+bool haslibertiesrec(char board[21][21], int x, int y)
+{	if((board[x-1][y]==0) || (board[x][y-1]==0) || (board[x+1][y]==0) || (board[x][y+1]==0))
 		return true;
 	int colour = board[x][y];
-	board[x][y] = 3;
+	board[x][y] = 4;
 	bool result = false;
-	result |= ((x>0 && colour==board[x-1][y]) ? haslibertiesrec(board, x-1, y) : false);
-	result |= ((y>0 && colour==board[x][y-1]) ? haslibertiesrec(board, x, y-1) : false);
-	result |= ((x<18 && colour==board[x+1][y]) ? haslibertiesrec(board, x+1, y) : false);
-	result |= ((y<18 && colour==board[x][y+1]) ? haslibertiesrec(board, x, y+1) : false);
+	result |= ((colour==board[x-1][y]) ? haslibertiesrec(board, x-1, y) : false);
+	result |= ((colour==board[x][y-1]) ? haslibertiesrec(board, x, y-1) : false);
+	result |= ((colour==board[x+1][y]) ? haslibertiesrec(board, x+1, y) : false);
+	result |= ((colour==board[x][y+1]) ? haslibertiesrec(board, x, y+1) : false);
 	return result;
 }
 
-bool hasliberties(int board[19][19], int x, int y)
-{	if(x<0 || x>18 || y<0 || y>18)
-		return false;
-	int temp[19][19];
+bool hasliberties(char board[21][21], int x, int y)
+{	char temp[21][21];
 	memcpy(temp, board, sizeof(temp));
 	return haslibertiesrec(temp, x, y);
 }
@@ -87,7 +84,7 @@ public:
 
 MainPanel* panel;
 
-MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(325, 325), wxTAB_TRAVERSAL, _T("panel"))
+MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 50), wxSize(312, 312), wxTAB_TRAVERSAL, _T("panel"))
 {		
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(MainPanel::LMouseUp));
@@ -100,11 +97,11 @@ MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0),
 
 void MainPanel::OnTimer(wxTimerEvent& event)
 {	int x, y;
-	int origmove = move;
+	int origmove = movenum;
 	int count = 0;
-	while(origmove==move)
-	{	x = rand()%19;
-		y = rand()%19;
+	while(origmove==movenum)
+	{	x = 1+rand()%19;
+		y = 1+rand()%19;
 		makemove(x, y);
 		count++;
 		//printf("attempt %d\n", count);
@@ -117,17 +114,13 @@ void MainPanel::OnTimer(wxTimerEvent& event)
 }
 
 void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
-{	if(colour==0)
+{	if(colour!=1 && colour!=2)
 		return;
 	else if(colour==1)
 		dc.SetBrush(*wxBLACK_BRUSH);
 	else if(colour==2)
 		dc.SetBrush(*wxWHITE_BRUSH);
-	else
-	{	printboard(board, x, y);
-		assert(false);
-	}
-	dc.DrawCircle(wxPoint(16*(x+1),16*(y+1)), 6);
+	dc.DrawCircle(wxPoint(16*x,16*y), 6);
 }
 
 void MainPanel::DrawBoard(wxDC& dc)
@@ -153,8 +146,8 @@ void MainPanel::DrawBoard(wxDC& dc)
 	dc.DrawRectangle(16*16-1, 16*10-1, 3, 3);
 	dc.DrawRectangle(16*16-1, 16*16-1, 3, 3);
 
-	for(i=0; i<19; i++)
-		for(j=0; j<19; j++)
+	for(i=0; i<21; i++)
+		for(j=0; j<21; j++)
 			DrawStone(dc, i, j, board[i][j]);
 }
 
@@ -184,9 +177,10 @@ public:
 MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size) : wxFrame(NULL, -1, title, pos, size)
 {	panel = new MainPanel(this);
 
-	PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"), wxPoint(125, 325));
+	PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"), wxPoint(125, 0));
 	Connect(wxID_HIGHEST+1, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainFrame::Pass));
 	
+	TurnText = new wxStaticText(this, wxID_ANY, _T("Black to play"), wxPoint(0, 0));
 	//Depth1Text = new wxTextCtrl(this, wxID_HIGHEST+2, _T(""), wxPoint(25, 350), wxDefaultSize, wxTE_PROCESS_ENTER);
 	//Connect(wxID_HIGHEST+2, wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(MainFrame::OnEnter));
 }
@@ -207,6 +201,10 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 
 void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 {	turn = (turn+1)%2;
+	if(turn==0)
+		TurnText->SetLabel("White to play");
+	else
+		TurnText->SetLabel("Black to play");
 	/*int x, y, count;
 	for(int i=0; i<25; i++)
 	{	int origmove = move;
@@ -224,11 +222,10 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 }
 
 void MainPanel::makemove(int x, int y)
-{	//printf("makemove(%d, %d)\n", x, y);
-	if(x<0 || x>18 || y<0 || y>18)
+{	if(x==0 || y==0 || x>boardsize || y>boardsize)
 		return;
 	wxClientDC dc(this);
-	int temp[19][19];
+	char temp[21][21];
 	memcpy(temp, board, sizeof(temp));
 	if(board[x][y]==0)
 	{	temp[x][y] = (turn+1)%2+1;
@@ -239,7 +236,7 @@ void MainPanel::makemove(int x, int y)
 		bool downhaslib = hasliberties(temp, x, y-1);
 		bool uphaslib = hasliberties(temp, x, y+1);
 	
-		if(haslib || (x>0 && !lefthaslib && temp[x-1][y]!=colour) || (x<18 && !righthaslib && temp[x+1][y]!=colour) || (y>0 && !downhaslib && temp[x][y-1]!=colour) || (y<18 && !uphaslib && temp[x][y+1]!=colour))
+		if(haslib || (!lefthaslib && temp[x-1][y]!=colour) || (!righthaslib && temp[x+1][y]!=colour) || (!downhaslib && temp[x][y-1]!=colour) || (!uphaslib && temp[x][y+1]!=colour))
 		{	if(!lefthaslib && temp[x-1][y]!=colour)
 				removegroup(temp, x-1, y);
 			if(!righthaslib && temp[x+1][y]!=colour)
@@ -250,7 +247,7 @@ void MainPanel::makemove(int x, int y)
 				removegroup(temp, x, y+1);
 				
 			bool dupe = false;
-			for(int i=0; i<move; i++)
+			for(int i=0; i<movenum; i++)
 				if(memcmp(temp, history[i], sizeof(temp))==0)
 					dupe = true;
 			
@@ -262,11 +259,16 @@ void MainPanel::makemove(int x, int y)
 				{	memcpy(board, temp, sizeof(temp));
 					DrawBoard(dc);
 				}
-				history = (int(*)[19][19])realloc(history, (move+1)*sizeof(int[19][19]));
-				memcpy(history[move], board, sizeof(history[move]));
-				move++;
-				printf("Move %d:\n", move);
+				history = (char(*)[21][21])realloc(history, (movenum+1)*sizeof(char[21][21]));
+				memcpy(history[movenum], board, sizeof(history[movenum]));
+				movenum++;
+				printf("Move %d:\n", movenum);
 				printboard(board, x, y);
+				
+				if(turn==0)
+					TurnText->SetLabel("White to play");
+				else
+					TurnText->SetLabel("Black to play");
 			}
 		}
 	}
@@ -274,19 +276,27 @@ void MainPanel::makemove(int x, int y)
 
 void MainPanel::LMouseUp(wxMouseEvent& event)
 {	int x, y;
-	x = (event.GetPosition().x-8)/16;
-	y = (event.GetPosition().y-8)/16;
+	x = 1+(event.GetPosition().x-8)/16;
+	y = 1+(event.GetPosition().y-8)/16;
 	makemove(x, y);
 }
 
 bool MyApp::OnInit()
 {
 	turn = 1;
-	move = 0;
+	movenum = 0;
+	boardsize = 19;
 	history = NULL;
-	for(int i=0; i<19; i++)
-		for(int j=0; j<19; j++)
+	for(int i=0; i<21; i++)
+		for(int j=0; j<21; j++)
 			board[i][j] = 0;
+			
+	for(int i=0; i<21; i++)
+	{	board[i][0] = 3;
+		board[i][boardsize+1] = 3;
+		board[0][i] = 3;
+		board[boardsize+1][i] = 3;
+	}
 	
 	frame = new MainFrame(wxT("Go Points"), wxPoint(-1, -1), wxSize(350, 400));
 	

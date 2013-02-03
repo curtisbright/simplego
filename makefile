@@ -1,6 +1,4 @@
-compile: go-points.cpp
-	g++ go-points.cpp `wx-config --cppflags` `wx-config --libs` -O3 -o go-points
-debug: go-points.cpp
-	g++ go-points.cpp `wx-config --cppflags` `wx-config --libs` -o go-points -g -pg
+simple-go: simple-go.cpp
+	g++ simple-go.cpp `wx-config --cppflags` `wx-config --libs` -o simple-go
 clean:
-	rm -f go-points
+	rm -f simple-go
