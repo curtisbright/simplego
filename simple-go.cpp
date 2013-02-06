@@ -11,6 +11,9 @@ wxButton* RandomButton;
 wxButton* NewButton;
 wxStaticText* TurnText;
 wxStaticText* MoveText;
+wxStaticText* ScoreText;
+wxTextCtrl* boardsizeInput;
+wxCheckBox* suicide;
 
 /*wxString pointname()
 {	wxString output = "";
@@ -183,21 +186,35 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 {	panel = new MainPanel(this);
 	wxFlexGridSizer* goSizer = new wxFlexGridSizer(1, 2, 0, 0);
 	wxBoxSizer* descriptionSizer = new wxBoxSizer(wxVERTICAL);
+	//wxBoxSizer* boardsizeSizer = new wxBoxSizer(wxHORIZONTAL);
 	
 	goSizer->Add(descriptionSizer, 1, wxBOTTOM|wxRIGHT, 5);
 	goSizer->Add(panel, 1, wxBOTTOM|wxRIGHT, 5);
 	
+	wxStaticText* boardsizeText = new wxStaticText(this, wxID_ANY, wxT("Board Size: "), wxDefaultPosition, wxDefaultSize, 0);
+	//boardsizeSizer->Add(boardsizeText, 0, wxALL, 0);
+	
 	TurnText = new wxStaticText(this, wxID_ANY, _T("Turn: Black"));
 	MoveText = new wxStaticText(this, wxID_ANY, _T("Move: 0"));
+	ScoreText = new wxStaticText(this, wxID_ANY, _T("Score: 0-0"));
 	PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"));
 	RandomButton = new wxButton(this, wxID_HIGHEST+2, _T("Random!"));
 	NewButton = new wxButton(this, wxID_HIGHEST+3, _T("New Game"));
+	boardsizeInput = new wxTextCtrl(this, wxID_HIGHEST+4, _T("19"));
+	suicide = new wxCheckBox(this, wxID_HIGHEST+5, _T("Allow suicide"));
+	
+	//boardsizeSizer->Add(boardsizeInput, 0, wxALL, 0);
 	
 	descriptionSizer->Add(TurnText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
 	descriptionSizer->Add(MoveText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(ScoreText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
 	descriptionSizer->Add(PassButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
 	descriptionSizer->Add(RandomButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
 	descriptionSizer->Add(NewButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	//descriptionSizer->Add(boardsizeSizer, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(boardsizeText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(boardsizeInput, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
+	descriptionSizer->Add(suicide, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
 	this->SetSizer(goSizer);
 	goSizer->Fit(this);
 	
@@ -229,6 +246,8 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 		TurnText->SetLabel("Turn: White");
 	else
 		TurnText->SetLabel("Turn: Black");
+	history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
+	memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
 	movenum++;
 	MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
 	/*int x, y, count;
@@ -303,7 +322,7 @@ void MainPanel::makemove(int x, int y)
 				removegroup(temp, x, y+1);
 				
 			bool dupe = false;
-			for(int i=0; i<movenum; i++)
+			for(int i=0; i<=movenum; i++)
 				if(memcmp(temp, history[i], sizeof(temp))==0)
 					dupe = true;
 			
@@ -315,8 +334,8 @@ void MainPanel::makemove(int x, int y)
 				{	memcpy(board, temp, sizeof(temp));
 					DrawBoard(dc);
 				}
-				history = (char(*)[21][21])realloc(history, (movenum+1)*sizeof(char[21][21]));
-				memcpy(history[movenum], board, sizeof(history[movenum]));
+				history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
+				memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
 				movenum++;
 				printf("Move %d:\n", movenum);
 				printboard(board, x, y);
@@ -343,10 +362,11 @@ bool MyApp::OnInit()
 	turn = 1;
 	movenum = 0;
 	boardsize = 19;
-	history = NULL;
+	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
 	for(int i=0; i<21; i++)
 		for(int j=0; j<21; j++)
 			board[i][j] = 0;
+	memcpy(history[movenum], board, sizeof(history[movenum]));
 			
 	for(int i=0; i<21; i++)
 	{	board[i][0] = 3;
@@ -355,7 +375,7 @@ bool MyApp::OnInit()
 		board[boardsize+1][i] = 3;
 	}
 	
-	frame = new MainFrame(wxT("Simple Go"), wxPoint(-1, -1), wxSize(-1, -1), wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER);
+	frame = new MainFrame(wxT("Simple Go"), wxPoint(-1, -1), wxSize(-1, -1), wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX);
 	
 	frame->Show();
 	SetTopWindow(frame);
