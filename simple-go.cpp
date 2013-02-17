@@ -1,11 +1,14 @@
 #include "wx/wx.h"
-#include <wx/dcbuffer.h>
 
 int movenum;
 int boardsize;
+int randomon = 0;
 char turn;
 char board[21][21];
 char (*history)[21][21];
+wxMenu* play_menu;
+
+//wxBitmap* boardbmp;
 
 //wxButton* PassButton;
 //wxButton* RandomButton;
@@ -111,13 +114,12 @@ bool validmove(int x, int y, char (*board)[21][21])
 class MainPanel : public wxPanel
 {
 public:
-	wxTimer* timer;
-	void OnTimer(wxTimerEvent& event);
 	void LMouseUp(wxMouseEvent& event);
 	void Paint(wxPaintEvent& evt);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc);
 	void makemove(int x, int y);
+	void OnIdle(wxIdleEvent& event);
 	wxFrame* frame;
 	MainPanel(wxFrame* parent);
 };
@@ -129,15 +131,14 @@ MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0),
 	frame = parent;
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(MainPanel::LMouseUp));
-	Connect(wxEVT_TIMER, wxTimerEventHandler(MainPanel::OnTimer), NULL, this);
-	
-	timer = new wxTimer();
-	timer->SetOwner(this);
-	//timer->Start(5);
+	Connect(wxEVT_IDLE, wxIdleEventHandler(MainPanel::OnIdle), NULL, this);
 }
 
-void MainPanel::OnTimer(wxTimerEvent& event)
-{	int x = 1+rand()%19, y = 1+rand()%19;
+void MainPanel::OnIdle(wxIdleEvent& event)
+{	if(!play_menu->IsChecked(wxID_HIGHEST+6))
+		return;
+	
+	int x = 1+rand()%19, y = 1+rand()%19;
 	char attempts[21][21];
 	memset(attempts, 0, sizeof(attempts));
 	char temp[21][21];
@@ -150,28 +151,63 @@ void MainPanel::OnTimer(wxTimerEvent& event)
 		memcpy(temp, board, sizeof(temp));
 		if(validmove(x, y, &temp))
 		{	makemove(x, y);
+			event.RequestMore();
 			return;
 		}
 		count++;
 		attempts[x][y] = 1;
 	}
 	turn = (turn+1)%2;
+
+	event.RequestMore();
 }
 
 void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
-{	if(colour!=1 && colour!=2)
-		return;
-	else if(colour==1)
+{	if(colour==0)
+	{	dc.SetBrush(*wxWHITE_BRUSH);
+		dc.SetPen(*wxWHITE_PEN);
+		dc.DrawRectangle(16*x-8, 16*y-8, 8, 8);
+		dc.DrawRectangle(16*x-8, 16*y+1, 8, 7);
+		dc.DrawRectangle(16*x+1, 16*y-8, 7, 8);
+		dc.DrawRectangle(16*x+1, 16*y+1, 7, 7);
+		if(x==1)
+			dc.DrawLine(16*x-8, 16*y, 16*x, 16*y);
+		else if(x==boardsize)
+			dc.DrawLine(16*x+1, 16*y, 16*x+8, 16*y);
+		if(y==1)
+			dc.DrawLine(16*x, 16*y-8, 16*x, 16*y);
+		else if(y==boardsize)
+			dc.DrawLine(16*x, 16*y+1, 16*x, 16*y+8);
+		dc.SetPen(*wxBLACK_PEN);
+		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:1),16*y);
+		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y+(y<boardsize?8:1));
 		dc.SetBrush(*wxBLACK_BRUSH);
+		if((x==4||x==10||x==16)&&(y==4||y==10||y==16))
+			dc.DrawRectangle(16*x-1, 16*y-1, 3, 3);
+	}
+	else if(colour==1)
+	{	dc.SetPen(*wxBLACK_PEN);
+		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:0),16*y);
+		dc.DrawLine(16*x,16*y-(y>1?8:1),16*x,16*y+(y<boardsize?8:1));
+		dc.SetBrush(*wxBLACK_BRUSH);
+		dc.DrawCircle(wxPoint(16*x,16*y), 6);
+	}
 	else if(colour==2)
-		dc.SetBrush(*wxWHITE_BRUSH);
-	dc.DrawCircle(wxPoint(16*x,16*y), 6);
+	{	dc.SetBrush(*wxWHITE_BRUSH);
+		dc.SetPen(*wxBLACK_PEN);
+		dc.DrawCircle(wxPoint(16*x,16*y), 6);
+		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
+		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?6:0));
+	}
 }
 
 void MainPanel::DrawBoard(wxDC& dc)
 {	int i, j;
 
-	dc.Clear();
+	// Fix for Ubuntu 12.04 Classic
+	frame->SetClientSize(321, 321);
+	
+	//dc.Clear();
 
 	/*dc.SetPen(*wxRED_PEN);
 	dc.SetBrush(*wxRED_BRUSH);
@@ -179,7 +215,7 @@ void MainPanel::DrawBoard(wxDC& dc)
 	dc.GetPixel(0, 0, &col);
 	dc.FloodFill(0, 0, col);*/
 
-	dc.SetPen(*wxBLACK_PEN);
+	/*dc.SetPen(*wxBLACK_PEN);
 	dc.SetBrush(*wxWHITE_BRUSH);
 
 	for(i=1; i<19; i++)
@@ -195,7 +231,7 @@ void MainPanel::DrawBoard(wxDC& dc)
 	dc.DrawRectangle(16*10-1, 16*16-1, 3, 3);
 	dc.DrawRectangle(16*16-1, 16*4-1, 3, 3);
 	dc.DrawRectangle(16*16-1, 16*10-1, 3, 3);
-	dc.DrawRectangle(16*16-1, 16*16-1, 3, 3);
+	dc.DrawRectangle(16*16-1, 16*16-1, 3, 3);*/
 
 	for(i=0; i<21; i++)
 		for(j=0; j<21; j++)
@@ -218,8 +254,8 @@ class MainFrame : public wxFrame
 {	
 private:
 	void Pass(wxCommandEvent& event);
-	void Random(wxCommandEvent& event);
 	void OnEnter(wxCommandEvent& event);
+	void GoToMove(wxCommandEvent& event);
 	void NewGame(wxCommandEvent& event);
 	void SetBoard(wxCommandEvent& event);
 
@@ -248,26 +284,29 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	//this->SetSizer(goSizer);
 	//goSizer->Fit(this);
 	
-	wxMenuBar *menu_bar = new wxMenuBar;
-	wxMenu *game_menu = new wxMenu;
+	wxMenuBar* menu_bar = new wxMenuBar;
+	wxMenu* game_menu = new wxMenu;
+	play_menu = new wxMenu;
 	
 	game_menu->Append(wxID_HIGHEST+4, wxT("&New game"));
 	game_menu->Append(wxID_HIGHEST+5, wxT("&Board size..."));
-	game_menu->Append(wxID_HIGHEST+1, wxT("&Pass"));
-	game_menu->Append(wxID_HIGHEST+6, wxT("&Random play"));
-	game_menu->Append(wxID_HIGHEST+7, wxT("&Allow suicide"));
+	play_menu->Append(wxID_HIGHEST+1, wxT("&Pass"));
+	play_menu->Append(wxID_HIGHEST+2, wxT("&Go to move..."));
+	play_menu->Append(wxID_HIGHEST+6, wxT("&Random!"), "", wxITEM_CHECK);
+	game_menu->Append(wxID_HIGHEST+7, wxT("&Allow suicide"), "", wxITEM_CHECK);
 	
 	Connect(wxID_HIGHEST+1, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Pass));
+	Connect(wxID_HIGHEST+2, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::GoToMove));
 	Connect(wxID_HIGHEST+4, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::NewGame));
 	Connect(wxID_HIGHEST+5, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
-	Connect(wxID_HIGHEST+6, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Random));
 	
 	menu_bar->Append(game_menu, wxT("&Game"));
+	menu_bar->Append(play_menu, wxT("&Play"));
 	SetMenuBar(menu_bar);
 	
 	CreateStatusBar(3);
 	SetStatusText(wxT("Turn: Black"), 0);
-	SetStatusText(wxT("Move: 0/0"), 1);
+	SetStatusText(wxT("Move: 0"), 1);
 	SetStatusText(wxT("Score: 0-0"), 2);
 	
 	//wxSizer* sizer = new wxBoxSizer(wxVERTICAL);
@@ -277,7 +316,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	
 	SetClientSize(panel->GetSize());
 	
-	//panel->SetSize( this->GetCientSize( ) ); 
+	//panel->SetSize( this->GetClientSize( ) ); 
 	
 	//goSizer->Fit(this);
 	
@@ -299,6 +338,10 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Refresh();
 }*/
 
+void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
+{	wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", movenum), "Go to move", wxString::Format("%d", movenum));
+}
+
 void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 {	turn = (turn+1)%2;
 	if(turn==0)
@@ -311,7 +354,7 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 	memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
 	movenum++;
 	//MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
-	SetStatusText("Move: " + wxString::Format("%d", movenum), 1);
+	SetStatusText(wxString::Format("Move: %d", movenum), 1);
 	/*int x, y, count;
 	for(int i=0; i<25; i++)
 	{	int origmove = move;
@@ -328,15 +371,8 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 	}*/
 }
 
-void MainFrame::Random(wxCommandEvent& WXUNUSED(event))
-{	if(panel->timer->IsRunning())
-		panel->timer->Stop();
-	else
-		panel->timer->Start(5);
-}
-
 void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
-{	wxGetTextFromUser("Enter the new board size:", "New board size", "19");
+{	wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", "19");
 }
 
 void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
@@ -366,19 +402,28 @@ void MainPanel::makemove(int x, int y)
 {	if(x==0 || y==0 || x>boardsize || y>boardsize)
 		return;
 	wxClientDC dc(this);
-	wxBufferedDC bufdc(&dc);
 	char temp[21][21];
 	memcpy(temp, board, sizeof(temp));
 	
 	if(validmove(x, y, &temp))
 	{	turn = (turn+1)%2;
-		memcpy(board, temp, sizeof(temp));
-		DrawBoard(bufdc);
+		board[x][y] = turn+1;
+		DrawStone(dc, x, y, turn+1);
+		if(memcmp(temp, board, sizeof(temp)))
+		{	//printf("updating board...\n");
+			for(int i=0; i<21; i++)
+				for(int j=0; j<21; j++)
+					if(temp[i][j]!=board[i][j])
+						DrawStone(dc, i, j, temp[i][j]);
+			memcpy(board, temp, sizeof(temp));
+			//DrawBoard(dc);
+		}
+		
 		history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
 		memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
 		movenum++;
-		printf("Move %d:\n", movenum);
-		printboard(board, x, y);
+		//printf("Move %d:\n", movenum);
+		//printboard(board, x, y);
 		//MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
 		frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
 		
@@ -400,6 +445,8 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 
 bool MyApp::OnInit()
 {
+	//boardbmp = new wxBitmap(321, 321);
+	
 	turn = 1;
 	movenum = 0;
 	boardsize = 19;
