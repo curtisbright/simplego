@@ -7,17 +7,20 @@ char turn;
 char board[21][21];
 char (*history)[21][21];
 wxMenu* play_menu;
+wxFrame* frame;
 
-//wxBitmap* boardbmp;
+class MainPanel : public wxPanel
+{
+public:
+	void LMouseUp(wxMouseEvent& event);
+	void Paint(wxPaintEvent& evt);
+	void DrawStone(wxDC& dc, int x, int y, int colour);
+	void DrawBoard(wxDC& dc);
+	void OnIdle(wxIdleEvent& event);
+	MainPanel(wxFrame* parent);
+};
 
-//wxButton* PassButton;
-//wxButton* RandomButton;
-//wxButton* NewButton;
-//wxStaticText* TurnText;
-//wxStaticText* MoveText;
-//wxStaticText* ScoreText;
-//wxTextCtrl* boardsizeInput;
-//wxCheckBox* suicide;
+MainPanel* panel;
 
 /*wxString pointname()
 {	wxString output = "";
@@ -111,22 +114,54 @@ bool validmove(int x, int y, char (*board)[21][21])
 	return false;
 }
 
-class MainPanel : public wxPanel
-{
-public:
-	void LMouseUp(wxMouseEvent& event);
-	void Paint(wxPaintEvent& evt);
-	void DrawStone(wxDC& dc, int x, int y, int colour);
-	void DrawBoard(wxDC& dc);
-	void makemove(int x, int y);
-	void OnIdle(wxIdleEvent& event);
-	wxFrame* frame;
-	MainPanel(wxFrame* parent);
-};
+void makemove(int x, int y)
+{	if(x==0 || y==0 || x>boardsize || y>boardsize)
+		return;
+	char temp[21][21];
+	memcpy(temp, board, sizeof(temp));
+	
+	if(validmove(x, y, &temp))
+	{	turn = (turn+1)%2;
+		board[x][y] = turn+1;
+		wxClientDC dc(panel);
+		panel->DrawStone(dc, x, y, turn+1);
+		if(memcmp(temp, board, sizeof(temp)))
+		{	//printf("updating board...\n");
+			for(int i=0; i<21; i++)
+				for(int j=0; j<21; j++)
+					if(temp[i][j]!=board[i][j])
+						panel->DrawStone(dc, i, j, temp[i][j]);
+			memcpy(board, temp, sizeof(temp));
+			//DrawBoard(dc);
+		}
+		
+		history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
+		memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
+		movenum++;
+		//printf("Move %d:\n", movenum);
+		//printboard(board, x, y);
+		frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
+		
+		if(turn==0)
+			frame->SetStatusText("Turn: White", 0);
+		else
+			frame->SetStatusText("Turn: Black", 0);
+	}
+}
 
-MainPanel* panel;
+void makepass()
+{	turn = (turn+1)%2;
+	if(turn==0)
+		frame->SetStatusText(wxT("Turn: White"), 0);
+	else
+		frame->SetStatusText(wxT("Turn: Black"), 0);
+	history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
+	memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
+	movenum++;
+	frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
+}
 
-MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(321, 321), wxTAB_TRAVERSAL, _T("panel"))
+MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(320, 320), wxTAB_TRAVERSAL, _T("panel"))
 {	
 	frame = parent;
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
@@ -205,36 +240,10 @@ void MainPanel::DrawBoard(wxDC& dc)
 {	int i, j;
 
 	// Fix for Ubuntu 12.04 Classic
-	frame->SetClientSize(321, 321);
-	
-	//dc.Clear();
+	frame->SetClientSize(320, 320);
 
-	/*dc.SetPen(*wxRED_PEN);
-	dc.SetBrush(*wxRED_BRUSH);
-	wxColour col;
-	dc.GetPixel(0, 0, &col);
-	dc.FloodFill(0, 0, col);*/
-
-	/*dc.SetPen(*wxBLACK_PEN);
-	dc.SetBrush(*wxWHITE_BRUSH);
-
-	for(i=1; i<19; i++)
-		for(j=1; j<19; j++)
-			dc.DrawRectangle(16*i, 16*j, 17, 17);
-			
-	dc.SetBrush(*wxBLACK_BRUSH);
-	dc.DrawRectangle(16*4-1, 16*4-1, 3, 3);
-	dc.DrawRectangle(16*4-1, 16*10-1, 3, 3);
-	dc.DrawRectangle(16*4-1, 16*16-1, 3, 3);
-	dc.DrawRectangle(16*10-1, 16*4-1, 3, 3);
-	dc.DrawRectangle(16*10-1, 16*10-1, 3, 3);
-	dc.DrawRectangle(16*10-1, 16*16-1, 3, 3);
-	dc.DrawRectangle(16*16-1, 16*4-1, 3, 3);
-	dc.DrawRectangle(16*16-1, 16*10-1, 3, 3);
-	dc.DrawRectangle(16*16-1, 16*16-1, 3, 3);*/
-
-	for(i=0; i<21; i++)
-		for(j=0; j<21; j++)
+	for(i=1; i<20; i++)
+		for(j=1; j<20; j++)
 			DrawStone(dc, i, j, board[i][j]);
 }
 
@@ -246,43 +255,25 @@ void MainPanel::Paint(wxPaintEvent& event)
  
 class MyApp : public wxApp
 {	bool OnInit();
-	wxFrame* frame;
-	//MainPanel* drawPane;
 };
 
 class MainFrame : public wxFrame
 {	
 private:
 	void Pass(wxCommandEvent& event);
+	void Nothing(wxMenuEvent& event);
 	void OnEnter(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
 	void NewGame(wxCommandEvent& event);
 	void SetBoard(wxCommandEvent& event);
 
 public:
-	MainPanel* panel;
 	MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
 };
 
 MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(NULL, -1, title, pos, size, style)
 {	panel = new MainPanel(this);
-	//wxFlexGridSizer* goSizer = new wxFlexGridSizer(1, 2, 0, 0);
-	//wxBoxSizer* descriptionSizer = new wxBoxSizer(wxVERTICAL);
-	
-	//goSizer->Add(descriptionSizer, 1, wxBOTTOM|wxRIGHT, 5);
-	//goSizer->Add(panel, 1, wxBOTTOM|wxRIGHT, 5);
-	
-	//TurnText = new wxStaticText(this, wxID_ANY, _T("Turn: Black"));
-	//MoveText = new wxStaticText(this, wxID_ANY, _T("Move: 0"));
-	//ScoreText = new wxStaticText(this, wxID_ANY, _T("Score: 0-0"));
-	//PassButton = new wxButton(this, wxID_HIGHEST+1, _T("Pass"));
-	
-	//descriptionSizer->Add(TurnText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
-	//descriptionSizer->Add(MoveText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
-	//descriptionSizer->Add(ScoreText, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
-	//descriptionSizer->Add(PassButton, 0, wxALIGN_TOP|wxLEFT|wxTOP, 5);
-	//this->SetSizer(goSizer);
-	//goSizer->Fit(this);
+	panel->SetBackgroundColour(*wxWHITE);
 	
 	wxMenuBar* menu_bar = new wxMenuBar;
 	wxMenu* game_menu = new wxMenu;
@@ -299,6 +290,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Connect(wxID_HIGHEST+2, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::GoToMove));
 	Connect(wxID_HIGHEST+4, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::NewGame));
 	Connect(wxID_HIGHEST+5, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
+	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(MainFrame::Nothing));
 	
 	menu_bar->Append(game_menu, wxT("&Game"));
 	menu_bar->Append(play_menu, wxT("&Play"));
@@ -309,19 +301,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetStatusText(wxT("Move: 0"), 1);
 	SetStatusText(wxT("Score: 0-0"), 2);
 	
-	//wxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	//sizer->Add(panel);
-	//this->SetSizer(sizer);
-	//sizer->Fit(this);
-	
-	SetClientSize(panel->GetSize());
-	
-	//panel->SetSize( this->GetClientSize( ) ); 
-	
-	//goSizer->Fit(this);
-	
-	//Depth1Text = new wxTextCtrl(this, wxID_HIGHEST+2, _T(""), wxPoint(25, 350), wxDefaultSize, wxTE_PROCESS_ENTER);
-	//Connect(wxID_HIGHEST+2, wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(MainFrame::OnEnter));
+	SetClientSize(320, 320);
 }
 
 /*void MainFrame::OnEnter(wxCommandEvent& WXUNUSED(event))
@@ -343,32 +323,11 @@ void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 }
 
 void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
-{	turn = (turn+1)%2;
-	if(turn==0)
-		//TurnText->SetLabel("Turn: White");
-		SetStatusText(wxT("Turn: White"), 0);
-	else
-		//TurnText->SetLabel("Turn: Black");
-		SetStatusText(wxT("Turn: Black"), 0);
-	history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
-	memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
-	movenum++;
-	//MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
-	SetStatusText(wxString::Format("Move: %d", movenum), 1);
-	/*int x, y, count;
-	for(int i=0; i<25; i++)
-	{	int origmove = move;
-		count = 0;
-		while(origmove==move)
-		{	x = rand()%19;
-			y = rand()%19;
-			panel->makemove(x, y);
-			count++;
-			if(count>500)
-				break;
-		}
-		printf("attempts: %d\n", count);
-	}*/
+{	makepass();
+}
+
+void MainFrame::Nothing(wxMenuEvent& WXUNUSED(event))
+{	
 }
 
 void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
@@ -398,44 +357,6 @@ void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
 	panel->DrawBoard(dc);
 }
 
-void MainPanel::makemove(int x, int y)
-{	if(x==0 || y==0 || x>boardsize || y>boardsize)
-		return;
-	wxClientDC dc(this);
-	char temp[21][21];
-	memcpy(temp, board, sizeof(temp));
-	
-	if(validmove(x, y, &temp))
-	{	turn = (turn+1)%2;
-		board[x][y] = turn+1;
-		DrawStone(dc, x, y, turn+1);
-		if(memcmp(temp, board, sizeof(temp)))
-		{	//printf("updating board...\n");
-			for(int i=0; i<21; i++)
-				for(int j=0; j<21; j++)
-					if(temp[i][j]!=board[i][j])
-						DrawStone(dc, i, j, temp[i][j]);
-			memcpy(board, temp, sizeof(temp));
-			//DrawBoard(dc);
-		}
-		
-		history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
-		memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
-		movenum++;
-		//printf("Move %d:\n", movenum);
-		//printboard(board, x, y);
-		//MoveText->SetLabel("Move: " + wxString::Format("%d", movenum));
-		frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
-		
-		if(turn==0)
-			//TurnText->SetLabel("Turn: White");
-			frame->SetStatusText("Turn: White", 0);
-		else
-			//TurnText->SetLabel("Turn: Black");
-			frame->SetStatusText("Turn: Black", 0);
-	}
-}
-
 void MainPanel::LMouseUp(wxMouseEvent& event)
 {	int x, y;
 	x = (event.GetPosition().x+8)/16;
@@ -444,9 +365,7 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 }
 
 bool MyApp::OnInit()
-{
-	//boardbmp = new wxBitmap(321, 321);
-	
+{	
 	turn = 1;
 	movenum = 0;
 	boardsize = 19;
