@@ -12,6 +12,7 @@ wxFrame* frame;
 class MainPanel : public wxPanel
 {
 public:
+	wxTimer* timer;
 	void LMouseUp(wxMouseEvent& event);
 	void Paint(wxPaintEvent& evt);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
@@ -167,12 +168,16 @@ MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0),
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(MainPanel::LMouseUp));
 	Connect(wxEVT_IDLE, wxIdleEventHandler(MainPanel::OnIdle), NULL, this);
+
+	timer = new wxTimer();
+	timer->SetOwner(this);
+	//timer->Start(1);
 }
 
 void MainPanel::OnIdle(wxIdleEvent& event)
 {	if(!play_menu->IsChecked(wxID_HIGHEST+6))
 		return;
-	
+
 	int x = 1+rand()%19, y = 1+rand()%19;
 	char attempts[21][21];
 	memset(attempts, 0, sizeof(attempts));
@@ -186,15 +191,12 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 		memcpy(temp, board, sizeof(temp));
 		if(validmove(x, y, &temp))
 		{	makemove(x, y);
-			event.RequestMore();
 			return;
 		}
 		count++;
 		attempts[x][y] = 1;
 	}
-	turn = (turn+1)%2;
-
-	event.RequestMore();
+	makepass();
 }
 
 void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
@@ -233,6 +235,8 @@ void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
 		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?6:0));
+		dc.DrawLine(16*x+(x<boardsize?6:0),16*y,16*x+(x<boardsize?8:0),16*y);
+		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
 	}
 }
 
@@ -261,6 +265,7 @@ class MainFrame : public wxFrame
 {	
 private:
 	void Pass(wxCommandEvent& event);
+	void Random(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);
 	void OnEnter(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
@@ -290,6 +295,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Connect(wxID_HIGHEST+2, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::GoToMove));
 	Connect(wxID_HIGHEST+4, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::NewGame));
 	Connect(wxID_HIGHEST+5, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
+	Connect(wxID_HIGHEST+6, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Random));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(MainFrame::Nothing));
 	
 	menu_bar->Append(game_menu, wxT("&Game"));
@@ -332,6 +338,13 @@ void MainFrame::Nothing(wxMenuEvent& WXUNUSED(event))
 
 void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
 {	wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", "19");
+}
+
+void MainFrame::Random(wxCommandEvent& WXUNUSED(event))
+{	if(panel->timer->IsRunning())
+		panel->timer->Stop();
+	else
+		panel->timer->Start(1);
 }
 
 void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
