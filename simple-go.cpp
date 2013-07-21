@@ -6,8 +6,18 @@ int randomon = 0;
 char turn;
 char board[21][21];
 char (*history)[21][21];
+wxMenu* game_menu;
 wxMenu* play_menu;
 wxFrame* frame;
+
+enum {
+	ID_PASS = wxID_HIGHEST+1,
+	ID_GO_TO_MOVE = wxID_HIGHEST+2,
+	ID_NEW_GAME = wxID_HIGHEST+3,
+	ID_BOARD_SIZE = wxID_HIGHEST+4,
+	ID_RANDOM = wxID_HIGHEST+5,
+	ID_SUICIDE = wxID_HIGHEST+6
+};
 
 class MainPanel : public wxPanel
 {
@@ -95,7 +105,7 @@ bool validmove(int x, int y, char (*board)[21][21])
 	bool downhaslib = hasliberties(*board, x, y+1);
 	bool uphaslib = hasliberties(*board, x, y-1);
 
-	if(haslib || (!lefthaslib && (*board)[x-1][y]!=colour) || (!righthaslib && (*board)[x+1][y]!=colour) || (!downhaslib && (*board)[x][y+1]!=colour) || (!uphaslib && (*board)[x][y-1]!=colour))
+	if(game_menu->IsChecked(ID_SUICIDE) || haslib || (!lefthaslib && (*board)[x-1][y]!=colour) || (!righthaslib && (*board)[x+1][y]!=colour) || (!downhaslib && (*board)[x][y+1]!=colour) || (!uphaslib && (*board)[x][y-1]!=colour))
 	{	if(!lefthaslib && (*board)[x-1][y]!=colour)
 			removegroup(*board, x-1, y);
 		if(!righthaslib && (*board)[x+1][y]!=colour)
@@ -104,6 +114,8 @@ bool validmove(int x, int y, char (*board)[21][21])
 			removegroup(*board, x, y+1);
 		if(!uphaslib && (*board)[x][y-1]!=colour)
 			removegroup(*board, x, y-1);
+		if(!hasliberties(*board, x, y))
+			removegroup(*board, x, y);
 			
 		bool dupe = false;
 		for(int i=0; i<=movenum; i++)
@@ -171,14 +183,13 @@ void initgame()
 	for(int i=0; i<21; i++)
 		for(int j=0; j<21; j++)
 			board[i][j] = 0;
-	memcpy(history[movenum], board, sizeof(history[movenum]));
-			
 	for(int i=0; i<21; i++)
-	{	board[i][0] = 3;
-		board[i][boardsize+1] = 3;
-		board[0][i] = 3;
-		board[boardsize+1][i] = 3;
-	}
+		{	board[i][0] = 3;
+			board[i][boardsize+1] = 3;
+			board[0][i] = 3;
+			board[boardsize+1][i] = 3;
+		}
+	memcpy(history[movenum], board, sizeof(history[movenum]));
 }
 
 MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(320, 320), wxTAB_TRAVERSAL, _T("panel"))
@@ -194,7 +205,7 @@ MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0),
 }
 
 void MainPanel::OnIdle(wxIdleEvent& event)
-{	if(!play_menu->IsChecked(wxID_HIGHEST+6))
+{	if(!play_menu->IsChecked(ID_RANDOM))
 		return;
 
 	int x = 1+rand()%boardsize, y = 1+rand()%boardsize;
@@ -309,21 +320,21 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	panel->SetBackgroundColour(*wxWHITE);
 	
 	wxMenuBar* menu_bar = new wxMenuBar;
-	wxMenu* game_menu = new wxMenu;
+	game_menu = new wxMenu;
 	play_menu = new wxMenu;
 	
-	game_menu->Append(wxID_HIGHEST+4, wxT("&New game"));
-	game_menu->Append(wxID_HIGHEST+5, wxT("&Board size..."));
-	play_menu->Append(wxID_HIGHEST+1, wxT("&Pass"));
-	play_menu->Append(wxID_HIGHEST+2, wxT("&Go to move..."));
-	play_menu->Append(wxID_HIGHEST+6, wxT("&Random!"), "", wxITEM_CHECK);
-	game_menu->Append(wxID_HIGHEST+7, wxT("&Allow suicide"), "", wxITEM_CHECK);
+	game_menu->Append(ID_NEW_GAME, wxT("&New game"));
+	game_menu->Append(ID_BOARD_SIZE, wxT("&Board size..."));
+	play_menu->Append(ID_PASS, wxT("&Pass"));
+	play_menu->Append(ID_GO_TO_MOVE, wxT("&Go to move..."));
+	play_menu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
+	game_menu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
 	
-	Connect(wxID_HIGHEST+1, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Pass));
-	Connect(wxID_HIGHEST+2, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::GoToMove));
-	Connect(wxID_HIGHEST+4, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::NewGame));
-	Connect(wxID_HIGHEST+5, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
-	Connect(wxID_HIGHEST+6, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Random));
+	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Pass));
+	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::GoToMove));
+	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::NewGame));
+	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
+	Connect(ID_RANDOM, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Random));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(MainFrame::Nothing));
 	
 	menu_bar->Append(game_menu, wxT("&Game"));
