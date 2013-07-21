@@ -162,6 +162,25 @@ void makepass()
 	frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
 }
 
+void initgame()
+{	turn = 1;
+	movenum = 0;
+	if(history!=NULL)
+		free(history);
+	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
+	for(int i=0; i<21; i++)
+		for(int j=0; j<21; j++)
+			board[i][j] = 0;
+	memcpy(history[movenum], board, sizeof(history[movenum]));
+			
+	for(int i=0; i<21; i++)
+	{	board[i][0] = 3;
+		board[i][boardsize+1] = 3;
+		board[0][i] = 3;
+		board[boardsize+1][i] = 3;
+	}
+}
+
 MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(320, 320), wxTAB_TRAVERSAL, _T("panel"))
 {	
 	frame = parent;
@@ -178,15 +197,15 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 {	if(!play_menu->IsChecked(wxID_HIGHEST+6))
 		return;
 
-	int x = 1+rand()%19, y = 1+rand()%19;
+	int x = 1+rand()%boardsize, y = 1+rand()%boardsize;
 	char attempts[21][21];
 	memset(attempts, 0, sizeof(attempts));
 	char temp[21][21];
 	int count = 0;
 	while(count<boardsize*boardsize)
 	{	while(attempts[x][y]==1)
-		{	x = 1+rand()%19;
-			y = 1+rand()%19;
+		{	x = 1+rand()%boardsize;
+			y = 1+rand()%boardsize;
 		}
 		memcpy(temp, board, sizeof(temp));
 		if(validmove(x, y, &temp))
@@ -219,7 +238,9 @@ void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:1),16*y);
 		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y+(y<boardsize?8:1));
 		dc.SetBrush(*wxBLACK_BRUSH);
-		if((x==4||x==10||x==16)&&(y==4||y==10||y==16))
+		if((boardsize==7&&(x==3||x==boardsize-2)&&(y==3||y==boardsize-2))
+			||(boardsize>7&&boardsize<13&&(x==3||x==boardsize-2||2*x==boardsize+1)&&(y==3||y==boardsize-2||2*y==boardsize+1))
+			||(boardsize>=13&&(x==4||x==boardsize-3||2*x==boardsize+1)&&(y==4||y==boardsize-3||2*y==boardsize+1)))
 			dc.DrawRectangle(16*x-1, 16*y-1, 3, 3);
 	}
 	else if(colour==1)
@@ -232,11 +253,11 @@ void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 	else if(colour==2)
 	{	dc.SetBrush(*wxWHITE_BRUSH);
 		dc.SetPen(*wxBLACK_PEN);
-		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
 		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?6:0));
 		dc.DrawLine(16*x+(x<boardsize?6:0),16*y,16*x+(x<boardsize?8:0),16*y);
 		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
+		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 	}
 }
 
@@ -248,7 +269,14 @@ void MainPanel::DrawBoard(wxDC& dc)
 
 	for(i=1; i<20; i++)
 		for(j=1; j<20; j++)
-			DrawStone(dc, i, j, board[i][j]);
+		{	if(i<=boardsize&&j<=boardsize)
+				DrawStone(dc, i, j, board[i][j]);
+			else
+			{	dc.SetBrush(*wxWHITE_BRUSH);
+				dc.SetPen(*wxWHITE_PEN);
+				dc.DrawRectangle(16*i-8, 16*j-8, 16, 16);
+			}
+		}
 }
 
 void MainPanel::Paint(wxPaintEvent& event)
@@ -337,7 +365,13 @@ void MainFrame::Nothing(wxMenuEvent& WXUNUSED(event))
 }
 
 void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
-{	wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", "19");
+{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", wxString::Format(wxT("%d"), boardsize)));
+	if(num>=2&&num<=19)
+	{	boardsize = num;
+		initgame();
+		wxClientDC dc(panel);
+		panel->DrawBoard(dc);
+	}
 }
 
 void MainFrame::Random(wxCommandEvent& WXUNUSED(event))
@@ -348,23 +382,7 @@ void MainFrame::Random(wxCommandEvent& WXUNUSED(event))
 }
 
 void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
-{	turn = 1;
-	movenum = 0;
-	boardsize = 19;
-	if(history!=NULL)
-		free(history);
-	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
-	for(int i=0; i<21; i++)
-		for(int j=0; j<21; j++)
-			board[i][j] = 0;
-	memcpy(history[movenum], board, sizeof(history[movenum]));
-			
-	for(int i=0; i<21; i++)
-	{	board[i][0] = 3;
-		board[i][boardsize+1] = 3;
-		board[0][i] = 3;
-		board[boardsize+1][i] = 3;
-	}
+{	initgame();
 	
 	wxClientDC dc(panel);
 	panel->DrawBoard(dc);
@@ -379,21 +397,8 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 
 bool MyApp::OnInit()
 {	
-	turn = 1;
-	movenum = 0;
 	boardsize = 19;
-	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
-	for(int i=0; i<21; i++)
-		for(int j=0; j<21; j++)
-			board[i][j] = 0;
-	memcpy(history[movenum], board, sizeof(history[movenum]));
-			
-	for(int i=0; i<21; i++)
-	{	board[i][0] = 3;
-		board[i][boardsize+1] = 3;
-		board[0][i] = 3;
-		board[boardsize+1][i] = 3;
-	}
+	initgame();
 	
 	frame = new MainFrame(wxT("Simple Go"), wxPoint(-1, -1), wxSize(-1, -1), wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX);
 	
