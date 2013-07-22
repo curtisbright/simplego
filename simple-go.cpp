@@ -194,6 +194,9 @@ void initgame()
 			board[boardsize+1][i] = 3;
 		}
 	memcpy(history[movenum], board, sizeof(history[movenum]));
+	frame->SetStatusText(wxT("Turn: Black"), 0);
+	frame->SetStatusText(wxT("Move: 0"), 1);
+	frame->SetStatusText(wxT("Score: 0-0"), 2);
 }
 
 MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(320, 320), wxTAB_TRAVERSAL, _T("panel"))
@@ -318,6 +321,7 @@ private:
 	void GoToMove(wxCommandEvent& event);
 	void NewGame(wxCommandEvent& event);
 	void SetBoard(wxCommandEvent& event);
+	void onKeyDown(wxKeyEvent& aEvent);
 
 public:
 	MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
@@ -344,6 +348,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
 	Connect(ID_RANDOM, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Random));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(MainFrame::Nothing));
+	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(MainFrame::onKeyDown));
 	
 	menu_bar->Append(game_menu, wxT("&Game"));
 	menu_bar->Append(play_menu, wxT("&Play"));
@@ -357,19 +362,14 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetClientSize(320, 320);
 }
 
-/*void MainFrame::OnEnter(wxCommandEvent& WXUNUSED(event))
-{	if(Depth1Text->GetValue().CmpNoCase(pointname())!=0)
-		wxMessageBox(pointname(), _("Wrong"), wxOK | wxICON_INFORMATION, this);
-	
-	x = 0;
-	y = 18;
-	x = rand()%19;
-	y = rand()%19;
-	
-	Depth1Text->SetValue("");
-	
-	Refresh();
-}*/
+void MainFrame::onKeyDown(wxKeyEvent& event)
+{	if(event.GetKeyCode()==WXK_LEFT)
+	{	movenum--;
+		memcpy(board, history[movenum], sizeof(board));
+		wxClientDC dc(panel);
+		panel->DrawBoard(dc);
+	}
+}
 
 void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 {	wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", movenum), "Go to move", "");
@@ -416,13 +416,13 @@ void MainPanel::LMouseUp(wxMouseEvent& event)
 
 bool MyApp::OnInit()
 {	
-	boardsize = 19;
-	initgame();
-	
 	frame = new MainFrame(wxT("Simple Go"), wxPoint(-1, -1), wxSize(-1, -1), wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX);
 	
 	frame->Show();
 	SetTopWindow(frame);
+	
+	boardsize = 19;
+	initgame();
 	
 	return true;
 } 
