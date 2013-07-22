@@ -1,10 +1,8 @@
 #include "wx/wx.h"
 
-bool lastpass;
-int movenum;
+int curmove;
+int totmove;
 int boardsize;
-int randomon = 0;
-char turn;
 char board[21][21];
 char (*history)[21][21];
 wxMenu* game_menu;
@@ -33,32 +31,6 @@ public:
 };
 
 MainPanel* panel;
-
-/*wxString pointname()
-{	wxString output = "";
-	output += wxString::Format("%c", x>=8 ? 'A'+x+1 : 'A'+x);
-	output += wxString::Format("%d", 19-y);
-	return output;
-}*/
-
-void printboard(char board[21][21], int x, int y)
-{	for(int j=0; j<21; j++)
-	{	for(int i=0; i<21; i++)
-		{	//if(i==x && j==y)
-			//	printf("*");
-			if(board[i][j]==0)
-				printf(".");
-			else if(board[i][j]==1)
-				printf("X");
-			else if(board[i][j]==2)
-				printf("O");
-			else if(board[i][j]==3)
-				printf(" ");
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
 
 void removegroup(char board[21][21], int x, int y)
 {	int colour = board[x][y];
@@ -98,7 +70,7 @@ bool validmove(int x, int y, char (*board)[21][21])
 {	if((*board)[x][y]!=0)
 		return false;
 		
-	(*board)[x][y] = (turn+1)%2+1;
+	(*board)[x][y] = curmove%2+1;
 	int colour = (*board)[x][y];
 	bool haslib = hasliberties(*board, x, y);
 	bool lefthaslib = hasliberties(*board, x-1, y);
@@ -119,7 +91,7 @@ bool validmove(int x, int y, char (*board)[21][21])
 			removegroup(*board, x, y);
 			
 		bool dupe = false;
-		for(int i=0; i<=movenum; i++)
+		for(int i=0; i<=curmove; i++)
 			if(memcmp(*board, history[i], sizeof(*board))==0)
 				dupe = true;
 				
@@ -135,11 +107,9 @@ void makemove(int x, int y)
 	memcpy(temp, board, sizeof(temp));
 	
 	if(validmove(x, y, &temp))
-	{	lastpass = false;
-		turn = (turn+1)%2;
-		board[x][y] = turn+1;
+	{	board[x][y] = curmove%2+1;
 		wxClientDC dc(panel);
-		panel->DrawStone(dc, x, y, turn+1);
+		panel->DrawStone(dc, x, y, curmove%2+1);
 		if(memcmp(temp, board, sizeof(temp)))
 		{	//printf("updating board...\n");
 			for(int i=0; i<21; i++)
@@ -150,37 +120,34 @@ void makemove(int x, int y)
 			//DrawBoard(dc);
 		}
 		
-		history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
-		memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
-		movenum++;
-		//printf("Move %d:\n", movenum);
-		//printboard(board, x, y);
-		frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
-		
-		if(turn==0)
-			frame->SetStatusText("Turn: White", 0);
+		history = (char(*)[21][21])realloc(history, (curmove+2)*sizeof(char[21][21]));
+		memcpy(history[curmove+1], board, sizeof(history[curmove+1]));
+		curmove++;
+		totmove = curmove;
+
+		if(curmove%2==0)
+			frame->SetStatusText(wxT("Turn: Black"), 0);
 		else
-			frame->SetStatusText("Turn: Black", 0);
+			frame->SetStatusText(wxT("Turn: White"), 0);
+		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
 	}
 }
 
 void makepass()
-{	lastpass = true;
-	turn = (turn+1)%2;
-	if(turn==0)
-		frame->SetStatusText(wxT("Turn: White"), 0);
-	else
+{	history = (char(*)[21][21])realloc(history, (curmove+2)*sizeof(char[21][21]));
+	memcpy(history[curmove+1], board, sizeof(history[curmove+1]));
+	curmove++;
+	totmove = curmove;
+	if(curmove%2==0)
 		frame->SetStatusText(wxT("Turn: Black"), 0);
-	history = (char(*)[21][21])realloc(history, (movenum+2)*sizeof(char[21][21]));
-	memcpy(history[movenum+1], board, sizeof(history[movenum+1]));
-	movenum++;
-	frame->SetStatusText(wxString::Format("Move: %d", movenum), 1);
+	else
+		frame->SetStatusText(wxT("Turn: White"), 0);
+	frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
 }
 
 void initgame()
-{	turn = 1;
-	movenum = 0;
-	lastpass = false;
+{	curmove = 0;
+	totmove = 0;
 	if(history!=NULL)
 		free(history);
 	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
@@ -193,7 +160,7 @@ void initgame()
 			board[0][i] = 3;
 			board[boardsize+1][i] = 3;
 		}
-	memcpy(history[movenum], board, sizeof(history[movenum]));
+	memcpy(history[0], board, sizeof(history[0]));
 	frame->SetStatusText(wxT("Turn: Black"), 0);
 	frame->SetStatusText(wxT("Move: 0"), 1);
 	frame->SetStatusText(wxT("Score: 0-0"), 2);
@@ -233,7 +200,7 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 		count++;
 		attempts[x][y] = 1;
 	}
-	if(lastpass)
+	if(curmove>=1 && memcmp(history[curmove], history[curmove-1], sizeof(history[curmove]))==0)
 	{	play_menu->Check(ID_RANDOM, false);
 		panel->timer->Stop();
 	}
@@ -363,16 +330,43 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 }
 
 void MainFrame::onKeyDown(wxKeyEvent& event)
-{	if(event.GetKeyCode()==WXK_LEFT)
-	{	movenum--;
-		memcpy(board, history[movenum], sizeof(board));
+{	if(event.GetKeyCode()==WXK_LEFT&&curmove>0)
+	{	curmove--;
+		if(curmove%2==0)
+			frame->SetStatusText(wxT("Turn: Black"), 0);
+		else
+			frame->SetStatusText(wxT("Turn: White"), 0);
+		memcpy(board, history[curmove], sizeof(board));
 		wxClientDC dc(panel);
 		panel->DrawBoard(dc);
+		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+	}
+	else if(event.GetKeyCode()==WXK_RIGHT&&curmove<totmove)
+	{	curmove++;
+		if(curmove%2==0)
+			frame->SetStatusText(wxT("Turn: Black"), 0);
+		else
+			frame->SetStatusText(wxT("Turn: White"), 0);
+		memcpy(board, history[curmove], sizeof(board));
+		wxClientDC dc(panel);
+		panel->DrawBoard(dc);
+		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
 	}
 }
 
 void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
-{	wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", movenum), "Go to move", "");
+{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", totmove), "Go to move", ""));
+	if(num>=0 && num<=totmove)
+	{	curmove = num;
+		if(curmove%2==0)
+			frame->SetStatusText(wxT("Turn: Black"), 0);
+		else
+			frame->SetStatusText(wxT("Turn: White"), 0);
+		memcpy(board, history[curmove], sizeof(board));
+		wxClientDC dc(panel);
+		panel->DrawBoard(dc);
+		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+	}
 }
 
 void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
