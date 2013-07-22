@@ -1,5 +1,6 @@
 #include "wx/wx.h"
 
+bool lastpass;
 int movenum;
 int boardsize;
 int randomon = 0;
@@ -134,7 +135,8 @@ void makemove(int x, int y)
 	memcpy(temp, board, sizeof(temp));
 	
 	if(validmove(x, y, &temp))
-	{	turn = (turn+1)%2;
+	{	lastpass = false;
+		turn = (turn+1)%2;
 		board[x][y] = turn+1;
 		wxClientDC dc(panel);
 		panel->DrawStone(dc, x, y, turn+1);
@@ -163,7 +165,8 @@ void makemove(int x, int y)
 }
 
 void makepass()
-{	turn = (turn+1)%2;
+{	lastpass = true;
+	turn = (turn+1)%2;
 	if(turn==0)
 		frame->SetStatusText(wxT("Turn: White"), 0);
 	else
@@ -177,6 +180,7 @@ void makepass()
 void initgame()
 {	turn = 1;
 	movenum = 0;
+	lastpass = false;
 	if(history!=NULL)
 		free(history);
 	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
@@ -225,6 +229,10 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 		}
 		count++;
 		attempts[x][y] = 1;
+	}
+	if(lastpass)
+	{	play_menu->Check(ID_RANDOM, false);
+		panel->timer->Stop();
 	}
 	makepass();
 }
@@ -364,7 +372,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 }*/
 
 void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
-{	wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", movenum), "Go to move", wxString::Format("%d", movenum));
+{	wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", movenum), "Go to move", "");
 }
 
 void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
@@ -376,7 +384,7 @@ void MainFrame::Nothing(wxMenuEvent& WXUNUSED(event))
 }
 
 void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
-{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", wxString::Format(wxT("%d"), boardsize)));
+{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
 	if(num>=2&&num<=19)
 	{	boardsize = num;
 		initgame();
