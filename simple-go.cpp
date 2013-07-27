@@ -1,5 +1,14 @@
 #include "wx/wx.h"
 
+#define EMPTY 0
+#define BLACK 1
+#define WHITE 2
+#define BORDER 3
+#define CHECKED 4
+#define BLACKAREA 4
+#define WHITEAREA 5
+#define MIXEDAREA 6
+
 int curmove;
 int totmove;
 int boardsize;
@@ -25,18 +34,63 @@ public:
 	void LMouseUp(wxMouseEvent& event);
 	void Paint(wxPaintEvent& evt);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
-	void DrawBoard(wxDC& dc);
+	void DrawBoard(wxDC& dc, char board[21][21]);
 	void OnIdle(wxIdleEvent& event);
 	MainPanel(wxFrame* parent);
 };
 
 MainPanel* panel;
 
+void spreadarea(char board[21][21], int x, int y, int colour)
+{	if(board[x][y]==EMPTY)
+	{	board[x][y] = colour+3;
+		spreadarea(board, x-1, y, colour);
+		spreadarea(board, x, y-1, colour);
+		spreadarea(board, x+1, y, colour);
+		spreadarea(board, x, y+1, colour);
+	}
+	else if((board[x][y]==BLACKAREA&&colour==WHITE)||(board[x][y]==WHITEAREA&&colour==BLACK))
+	{	board[x][y] = MIXEDAREA;
+		spreadarea(board, x-1, y, colour);
+		spreadarea(board, x, y-1, colour);
+		spreadarea(board, x+1, y, colour);
+		spreadarea(board, x, y+1, colour);
+	}
+}
+
+void scoregame(char board[21][21])
+{	char temp[21][21];
+	memcpy(temp, board, sizeof(temp));
+	for(int i=1; i<=boardsize; i++)
+		for(int j=1; j<=boardsize; j++)
+			if(temp[i][j]==BLACK||temp[i][j]==WHITE)
+			{	spreadarea(temp, i-1, j, temp[i][j]);
+				spreadarea(temp, i, j-1, temp[i][j]);
+				spreadarea(temp, i+1, j, temp[i][j]);
+				spreadarea(temp, i, j+1, temp[i][j]);
+			}
+	
+	int whitescore = 0;
+	int blackscore = 0;
+	
+	for(int i=1; i<=boardsize; i++)
+		for(int j=1; j<=boardsize; j++)
+			if(temp[i][j]==BLACK||temp[i][j]==BLACKAREA)
+				blackscore++;
+			else if(temp[i][j]==WHITE||temp[i][j]==WHITEAREA)
+				whitescore++;
+				
+	frame->SetStatusText(wxString::Format("Area: %d-%d", blackscore, whitescore), 2);
+	
+	/*wxClientDC dc(panel);
+	panel->DrawBoard(dc, temp);*/
+}
+
 void removegroup(char board[21][21], int x, int y)
 {	int colour = board[x][y];
-	if(colour==0)
+	if(colour==EMPTY)
 		return;
-	board[x][y] = 0;
+	board[x][y] = EMPTY;
 	if(board[x-1][y]==colour)
 		removegroup(board, x-1, y);
 	if(board[x+1][y]==colour)
@@ -48,10 +102,10 @@ void removegroup(char board[21][21], int x, int y)
 }
 
 bool haslibertiesrec(char board[21][21], int x, int y)
-{	if((board[x-1][y]==0) || (board[x][y-1]==0) || (board[x+1][y]==0) || (board[x][y+1]==0))
+{	if((board[x-1][y]==EMPTY) || (board[x][y-1]==EMPTY) || (board[x+1][y]==EMPTY) || (board[x][y+1]==EMPTY))
 		return true;
 	int colour = board[x][y];
-	board[x][y] = 4;
+	board[x][y] = CHECKED;
 	bool result = false;
 	result |= ((colour==board[x-1][y]) ? haslibertiesrec(board, x-1, y) : false);
 	result |= ((colour==board[x][y-1]) ? haslibertiesrec(board, x, y-1) : false);
@@ -67,7 +121,7 @@ bool hasliberties(char board[21][21], int x, int y)
 }
 
 bool validmove(int x, int y, char (*board)[21][21])
-{	if((*board)[x][y]!=0)
+{	if((*board)[x][y]!=EMPTY)
 		return false;
 		
 	(*board)[x][y] = curmove%2+1;
@@ -130,6 +184,7 @@ void makemove(int x, int y)
 		else
 			frame->SetStatusText(wxT("Turn: White"), 0);
 		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+		scoregame(board);
 	}
 }
 
@@ -153,17 +208,17 @@ void initgame()
 	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
 	for(int i=0; i<21; i++)
 		for(int j=0; j<21; j++)
-			board[i][j] = 0;
+			board[i][j] = EMPTY;
 	for(int i=0; i<21; i++)
-		{	board[i][0] = 3;
-			board[i][boardsize+1] = 3;
-			board[0][i] = 3;
-			board[boardsize+1][i] = 3;
+		{	board[i][0] = BORDER;
+			board[i][boardsize+1] = BORDER;
+			board[0][i] = BORDER;
+			board[boardsize+1][i] = BORDER;
 		}
 	memcpy(history[0], board, sizeof(history[0]));
 	frame->SetStatusText(wxT("Turn: Black"), 0);
 	frame->SetStatusText(wxT("Move: 0"), 1);
-	frame->SetStatusText(wxT("Score: 0-0"), 2);
+	scoregame(board);
 }
 
 MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0), wxSize(320, 320), wxTAB_TRAVERSAL, _T("panel"))
@@ -208,7 +263,7 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 }
 
 void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
-{	if(colour==0)
+{	if(colour==EMPTY/*||colour==MIXEDAREA*/)
 	{	dc.SetBrush(*wxWHITE_BRUSH);
 		dc.SetPen(*wxWHITE_PEN);
 		dc.DrawRectangle(16*x-8, 16*y-8, 8, 8);
@@ -232,14 +287,14 @@ void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 			||(boardsize>=13&&(x==4||x==boardsize-3||2*x==boardsize+1)&&(y==4||y==boardsize-3||2*y==boardsize+1)))
 			dc.DrawRectangle(16*x-1, 16*y-1, 3, 3);
 	}
-	else if(colour==1)
+	else if(colour==BLACK)
 	{	dc.SetPen(*wxBLACK_PEN);
 		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:0),16*y);
 		dc.DrawLine(16*x,16*y-(y>1?8:1),16*x,16*y+(y<boardsize?8:1));
 		dc.SetBrush(*wxBLACK_BRUSH);
 		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 	}
-	else if(colour==2)
+	else if(colour==WHITE)
 	{	dc.SetBrush(*wxWHITE_BRUSH);
 		dc.SetPen(*wxBLACK_PEN);
 		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
@@ -248,9 +303,25 @@ void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
 		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 	}
+	/*else if(colour==BLACKAREA)
+	{	dc.SetPen(*wxBLACK_PEN);
+		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:0),16*y);
+		dc.DrawLine(16*x,16*y-(y>1?8:1),16*x,16*y+(y<boardsize?8:1));
+		dc.SetBrush(*wxBLACK_BRUSH);
+		dc.DrawCircle(wxPoint(16*x,16*y), 3);
+	}
+	else if(colour==WHITEAREA)
+	{	dc.SetBrush(*wxWHITE_BRUSH);
+		dc.SetPen(*wxBLACK_PEN);
+		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
+		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?6:0));
+		dc.DrawLine(16*x+(x<boardsize?6:0),16*y,16*x+(x<boardsize?8:0),16*y);
+		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
+		dc.DrawCircle(wxPoint(16*x,16*y), 3);
+	}*/
 }
 
-void MainPanel::DrawBoard(wxDC& dc)
+void MainPanel::DrawBoard(wxDC& dc, char board[21][21])
 {	int i, j;
 
 	// Fix for Ubuntu 12.04 Classic
@@ -271,7 +342,7 @@ void MainPanel::DrawBoard(wxDC& dc)
 void MainPanel::Paint(wxPaintEvent& event)
 {	wxPaintDC dc(this);
 
-	DrawBoard(dc);
+	DrawBoard(dc, board);
 }
  
 class MyApp : public wxApp
@@ -322,10 +393,6 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetMenuBar(menu_bar);
 	
 	CreateStatusBar(3);
-	SetStatusText(wxT("Turn: Black"), 0);
-	SetStatusText(wxT("Move: 0"), 1);
-	SetStatusText(wxT("Score: 0-0"), 2);
-	
 	SetClientSize(320, 320);
 }
 
@@ -338,8 +405,9 @@ void MainFrame::onKeyDown(wxKeyEvent& event)
 			frame->SetStatusText(wxT("Turn: White"), 0);
 		memcpy(board, history[curmove], sizeof(board));
 		wxClientDC dc(panel);
-		panel->DrawBoard(dc);
+		panel->DrawBoard(dc, board);
 		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+		scoregame(board);
 	}
 	else if(event.GetKeyCode()==WXK_RIGHT&&curmove<totmove)
 	{	curmove++;
@@ -349,8 +417,9 @@ void MainFrame::onKeyDown(wxKeyEvent& event)
 			frame->SetStatusText(wxT("Turn: White"), 0);
 		memcpy(board, history[curmove], sizeof(board));
 		wxClientDC dc(panel);
-		panel->DrawBoard(dc);
+		panel->DrawBoard(dc, board);
 		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+		scoregame(board);
 	}
 }
 
@@ -364,8 +433,9 @@ void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 			frame->SetStatusText(wxT("Turn: White"), 0);
 		memcpy(board, history[curmove], sizeof(board));
 		wxClientDC dc(panel);
-		panel->DrawBoard(dc);
+		panel->DrawBoard(dc, board);
 		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+		scoregame(board);
 	}
 }
 
@@ -383,7 +453,7 @@ void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
 	{	boardsize = num;
 		initgame();
 		wxClientDC dc(panel);
-		panel->DrawBoard(dc);
+		panel->DrawBoard(dc, board);
 	}
 }
 
@@ -398,7 +468,7 @@ void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
 {	initgame();
 	
 	wxClientDC dc(panel);
-	panel->DrawBoard(dc);
+	panel->DrawBoard(dc, board);
 }
 
 void MainPanel::LMouseUp(wxMouseEvent& event)
