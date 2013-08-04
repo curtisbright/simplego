@@ -3,11 +3,13 @@
 #define EMPTY 0
 #define BLACK 1
 #define WHITE 2
+#define OPP(x) (3-x)
 #define BORDER 3
-#define CHECKED 4
+#define AREAOFFSET 3
 #define BLACKAREA 4
 #define WHITEAREA 5
 #define MIXEDAREA 6
+#define BOARDMEMORYLEN sizeof(char[21][21])
 
 int curmove;
 int totmove;
@@ -36,6 +38,7 @@ public:
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc, char board[21][21]);
 	void OnIdle(wxIdleEvent& event);
+	void onKeyDown(wxKeyEvent& aEvent);
 	MainPanel(wxFrame* parent);
 };
 
@@ -43,7 +46,7 @@ MainPanel* panel;
 
 void spreadarea(char board[21][21], int x, int y, int colour)
 {	if(board[x][y]==EMPTY)
-	{	board[x][y] = colour+3;
+	{	board[x][y] = colour+AREAOFFSET;
 		spreadarea(board, x-1, y, colour);
 		spreadarea(board, x, y-1, colour);
 		spreadarea(board, x+1, y, colour);
@@ -60,7 +63,7 @@ void spreadarea(char board[21][21], int x, int y, int colour)
 
 void scoregame(char board[21][21])
 {	char temp[21][21];
-	memcpy(temp, board, sizeof(temp));
+	memcpy(temp, board, BOARDMEMORYLEN);
 	for(int i=1; i<=boardsize; i++)
 		for(int j=1; j<=boardsize; j++)
 			if(temp[i][j]==BLACK||temp[i][j]==WHITE)
@@ -81,15 +84,18 @@ void scoregame(char board[21][21])
 				whitescore++;
 				
 	frame->SetStatusText(wxString::Format("Area: %d-%d", blackscore, whitescore), 2);
-	
-	/*wxClientDC dc(panel);
-	panel->DrawBoard(dc, temp);*/
+}
+
+void updateturn()
+{	if(curmove%2==0)
+		frame->SetStatusText(wxT("Turn: Black"), 0);
+	else
+		frame->SetStatusText(wxT("Turn: White"), 0);
+	frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
 }
 
 void removegroup(char board[21][21], int x, int y)
 {	int colour = board[x][y];
-	if(colour==EMPTY)
-		return;
 	board[x][y] = EMPTY;
 	if(board[x-1][y]==colour)
 		removegroup(board, x-1, y);
@@ -105,99 +111,84 @@ bool haslibertiesrec(char board[21][21], int x, int y)
 {	if((board[x-1][y]==EMPTY) || (board[x][y-1]==EMPTY) || (board[x+1][y]==EMPTY) || (board[x][y+1]==EMPTY))
 		return true;
 	int colour = board[x][y];
-	board[x][y] = CHECKED;
-	bool result = false;
-	result |= ((colour==board[x-1][y]) ? haslibertiesrec(board, x-1, y) : false);
-	result |= ((colour==board[x][y-1]) ? haslibertiesrec(board, x, y-1) : false);
-	result |= ((colour==board[x+1][y]) ? haslibertiesrec(board, x+1, y) : false);
-	result |= ((colour==board[x][y+1]) ? haslibertiesrec(board, x, y+1) : false);
-	return result;
+	board[x][y] = BORDER;
+	if((board[x-1][y]==colour && haslibertiesrec(board, x-1, y))
+	 ||(board[x][y-1]==colour && haslibertiesrec(board, x, y-1))
+	 ||(board[x+1][y]==colour && haslibertiesrec(board, x+1, y))
+	 ||(board[x][y+1]==colour && haslibertiesrec(board, x, y+1)))
+		return true;
+	return false;
 }
 
 bool hasliberties(char board[21][21], int x, int y)
 {	char temp[21][21];
-	memcpy(temp, board, sizeof(temp));
+	memcpy(temp, board, BOARDMEMORYLEN);
 	return haslibertiesrec(temp, x, y);
 }
 
-bool validmove(int x, int y, char (*board)[21][21])
-{	if((*board)[x][y]!=EMPTY)
+bool validmove(int x, int y, char board[21][21])
+{	if(board[x][y]!=EMPTY)
 		return false;
 		
-	(*board)[x][y] = curmove%2+1;
-	int colour = (*board)[x][y];
-	bool haslib = hasliberties(*board, x, y);
-	bool lefthaslib = hasliberties(*board, x-1, y);
-	bool righthaslib = hasliberties(*board, x+1, y);
-	bool downhaslib = hasliberties(*board, x, y+1);
-	bool uphaslib = hasliberties(*board, x, y-1);
+	board[x][y] = curmove%2+1;
+	int colour = board[x][y];
+	int oppcolour = OPP(colour);
 
-	if(game_menu->IsChecked(ID_SUICIDE) || haslib || (!lefthaslib && (*board)[x-1][y]!=colour) || (!righthaslib && (*board)[x+1][y]!=colour) || (!downhaslib && (*board)[x][y+1]!=colour) || (!uphaslib && (*board)[x][y-1]!=colour))
-	{	if(!lefthaslib && (*board)[x-1][y]!=colour)
-			removegroup(*board, x-1, y);
-		if(!righthaslib && (*board)[x+1][y]!=colour)
-			removegroup(*board, x+1, y);
-		if(!downhaslib && (*board)[x][y+1]!=colour)
-			removegroup(*board, x, y+1);
-		if(!uphaslib && (*board)[x][y-1]!=colour)
-			removegroup(*board, x, y-1);
-		if(!hasliberties(*board, x, y))
-			removegroup(*board, x, y);
-			
-		bool dupe = false;
-		for(int i=0; i<=curmove; i++)
-			if(memcmp(*board, history[i], sizeof(*board))==0)
-				dupe = true;
-				
-		return !dupe;
-	}
-	return false;
+	if(board[x-1][y]==oppcolour && !hasliberties(board, x-1, y))
+		removegroup(board, x-1, y);
+	if(board[x+1][y]==oppcolour && !hasliberties(board, x+1, y))
+		removegroup(board, x+1, y);
+	if(board[x][y+1]==oppcolour && !hasliberties(board, x, y+1))
+		removegroup(board, x, y+1);
+	if(board[x][y-1]==oppcolour && !hasliberties(board, x, y-1))
+		removegroup(board, x, y-1);
+	if(!game_menu->IsChecked(ID_SUICIDE) && !hasliberties(board, x, y))
+		return false;
+	else if(!hasliberties(board, x, y))
+		removegroup(board, x, y);
+		
+	bool dupe = false;
+	for(int i=0; i<=curmove; i++)
+		if(memcmp(board, history[i], BOARDMEMORYLEN)==0)
+			dupe = true;
+	
+	return !dupe;
 }
 
 void makemove(int x, int y)
 {	if(x==0 || y==0 || x>boardsize || y>boardsize)
 		return;
 	char temp[21][21];
-	memcpy(temp, board, sizeof(temp));
+	memcpy(temp, board, BOARDMEMORYLEN);
 	
-	if(validmove(x, y, &temp))
+	if(validmove(x, y, temp))
 	{	board[x][y] = curmove%2+1;
 		wxClientDC dc(panel);
 		panel->DrawStone(dc, x, y, curmove%2+1);
-		if(memcmp(temp, board, sizeof(temp)))
-		{	//printf("updating board...\n");
-			for(int i=0; i<21; i++)
+		if(memcmp(temp, board, BOARDMEMORYLEN))
+		{	for(int i=0; i<21; i++)
 				for(int j=0; j<21; j++)
 					if(temp[i][j]!=board[i][j])
 						panel->DrawStone(dc, i, j, temp[i][j]);
-			memcpy(board, temp, sizeof(temp));
-			//DrawBoard(dc);
+			memcpy(board, temp, BOARDMEMORYLEN);
 		}
 		
 		history = (char(*)[21][21])realloc(history, (curmove+2)*sizeof(char[21][21]));
-		memcpy(history[curmove+1], board, sizeof(history[curmove+1]));
+		memcpy(history[curmove+1], board, BOARDMEMORYLEN);
 		curmove++;
 		totmove = curmove;
 
-		if(curmove%2==0)
-			frame->SetStatusText(wxT("Turn: Black"), 0);
-		else
-			frame->SetStatusText(wxT("Turn: White"), 0);
-		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+		updateturn();
 		scoregame(board);
 	}
 }
 
 void makepass()
-{	history = (char(*)[21][21])realloc(history, (curmove+2)*sizeof(char[21][21]));
-	memcpy(history[curmove+1], board, sizeof(history[curmove+1]));
+{	history = (char(*)[21][21])realloc(history, (curmove+2)*BOARDMEMORYLEN);
+	memcpy(history[curmove+1], board, BOARDMEMORYLEN);
 	curmove++;
 	totmove = curmove;
-	if(curmove%2==0)
-		frame->SetStatusText(wxT("Turn: Black"), 0);
-	else
-		frame->SetStatusText(wxT("Turn: White"), 0);
-	frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+	updateturn();
 }
 
 void initgame()
@@ -205,7 +196,7 @@ void initgame()
 	totmove = 0;
 	if(history!=NULL)
 		free(history);
-	history = (char(*)[21][21])malloc(sizeof(char[21][21]));
+	history = (char(*)[21][21])malloc(BOARDMEMORYLEN);
 	for(int i=0; i<21; i++)
 		for(int j=0; j<21; j++)
 			board[i][j] = EMPTY;
@@ -215,9 +206,8 @@ void initgame()
 			board[0][i] = BORDER;
 			board[boardsize+1][i] = BORDER;
 		}
-	memcpy(history[0], board, sizeof(history[0]));
-	frame->SetStatusText(wxT("Turn: Black"), 0);
-	frame->SetStatusText(wxT("Move: 0"), 1);
+	memcpy(history[0], board, BOARDMEMORYLEN);
+	updateturn();
 	scoregame(board);
 }
 
@@ -227,6 +217,7 @@ MainPanel::MainPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY, wxPoint(0, 0),
 	Connect(wxEVT_PAINT, wxPaintEventHandler(MainPanel::Paint));
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(MainPanel::LMouseUp));
 	Connect(wxEVT_IDLE, wxIdleEventHandler(MainPanel::OnIdle), NULL, this);
+	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(MainPanel::onKeyDown));
 
 	timer = new wxTimer();
 	timer->SetOwner(this);
@@ -239,7 +230,7 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 
 	int x = 1+rand()%boardsize, y = 1+rand()%boardsize;
 	char attempts[21][21];
-	memset(attempts, 0, sizeof(attempts));
+	memset(attempts, 0, BOARDMEMORYLEN);
 	char temp[21][21];
 	int count = 0;
 	while(count<boardsize*boardsize)
@@ -247,15 +238,15 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 		{	x = 1+rand()%boardsize;
 			y = 1+rand()%boardsize;
 		}
-		memcpy(temp, board, sizeof(temp));
-		if(validmove(x, y, &temp))
+		memcpy(temp, board, BOARDMEMORYLEN);
+		if(validmove(x, y, temp))
 		{	makemove(x, y);
 			return;
 		}
 		count++;
 		attempts[x][y] = 1;
 	}
-	if(curmove>=1 && memcmp(history[curmove], history[curmove-1], sizeof(history[curmove]))==0)
+	if(curmove>=1 && memcmp(history[curmove], history[curmove-1], BOARDMEMORYLEN)==0)
 	{	play_menu->Check(ID_RANDOM, false);
 		panel->timer->Stop();
 	}
@@ -263,7 +254,7 @@ void MainPanel::OnIdle(wxIdleEvent& event)
 }
 
 void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
-{	if(colour==EMPTY/*||colour==MIXEDAREA*/)
+{	if(colour==EMPTY)
 	{	dc.SetBrush(*wxWHITE_BRUSH);
 		dc.SetPen(*wxWHITE_PEN);
 		dc.DrawRectangle(16*x-8, 16*y-8, 8, 8);
@@ -303,22 +294,27 @@ void MainPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
 		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 	}
-	/*else if(colour==BLACKAREA)
-	{	dc.SetPen(*wxBLACK_PEN);
-		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:0),16*y);
-		dc.DrawLine(16*x,16*y-(y>1?8:1),16*x,16*y+(y<boardsize?8:1));
-		dc.SetBrush(*wxBLACK_BRUSH);
-		dc.DrawCircle(wxPoint(16*x,16*y), 3);
+}
+
+void updateboard()
+{	memcpy(board, history[curmove], BOARDMEMORYLEN);
+	wxClientDC dc(panel);
+	panel->DrawBoard(dc, board);
+	updateturn();
+	scoregame(board);
+}
+
+void MainPanel::onKeyDown(wxKeyEvent& event)
+{	if(event.GetKeyCode()==WXK_LEFT&&curmove>0)
+	{	curmove--;
+		updateboard();
 	}
-	else if(colour==WHITEAREA)
-	{	dc.SetBrush(*wxWHITE_BRUSH);
-		dc.SetPen(*wxBLACK_PEN);
-		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
-		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?6:0));
-		dc.DrawLine(16*x+(x<boardsize?6:0),16*y,16*x+(x<boardsize?8:0),16*y);
-		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
-		dc.DrawCircle(wxPoint(16*x,16*y), 3);
-	}*/
+	else if(event.GetKeyCode()==WXK_RIGHT&&curmove<totmove)
+	{	curmove++;
+		updateboard();
+	}
+	else if(event.GetKeyCode()=='P')
+		makepass();
 }
 
 void MainPanel::DrawBoard(wxDC& dc, char board[21][21])
@@ -341,7 +337,6 @@ void MainPanel::DrawBoard(wxDC& dc, char board[21][21])
 
 void MainPanel::Paint(wxPaintEvent& event)
 {	wxPaintDC dc(this);
-
 	DrawBoard(dc, board);
 }
  
@@ -359,7 +354,6 @@ private:
 	void GoToMove(wxCommandEvent& event);
 	void NewGame(wxCommandEvent& event);
 	void SetBoard(wxCommandEvent& event);
-	void onKeyDown(wxKeyEvent& aEvent);
 
 public:
 	MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
@@ -386,7 +380,6 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::SetBoard));
 	Connect(ID_RANDOM, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::Random));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(MainFrame::Nothing));
-	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(MainFrame::onKeyDown));
 	
 	menu_bar->Append(game_menu, wxT("&Game"));
 	menu_bar->Append(play_menu, wxT("&Play"));
@@ -396,46 +389,11 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetClientSize(320, 320);
 }
 
-void MainFrame::onKeyDown(wxKeyEvent& event)
-{	if(event.GetKeyCode()==WXK_LEFT&&curmove>0)
-	{	curmove--;
-		if(curmove%2==0)
-			frame->SetStatusText(wxT("Turn: Black"), 0);
-		else
-			frame->SetStatusText(wxT("Turn: White"), 0);
-		memcpy(board, history[curmove], sizeof(board));
-		wxClientDC dc(panel);
-		panel->DrawBoard(dc, board);
-		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
-		scoregame(board);
-	}
-	else if(event.GetKeyCode()==WXK_RIGHT&&curmove<totmove)
-	{	curmove++;
-		if(curmove%2==0)
-			frame->SetStatusText(wxT("Turn: Black"), 0);
-		else
-			frame->SetStatusText(wxT("Turn: White"), 0);
-		memcpy(board, history[curmove], sizeof(board));
-		wxClientDC dc(panel);
-		panel->DrawBoard(dc, board);
-		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
-		scoregame(board);
-	}
-}
-
 void MainFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 {	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", totmove), "Go to move", ""));
 	if(num>=0 && num<=totmove)
 	{	curmove = num;
-		if(curmove%2==0)
-			frame->SetStatusText(wxT("Turn: Black"), 0);
-		else
-			frame->SetStatusText(wxT("Turn: White"), 0);
-		memcpy(board, history[curmove], sizeof(board));
-		wxClientDC dc(panel);
-		panel->DrawBoard(dc, board);
-		frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
-		scoregame(board);
+		updateboard();
 	}
 }
 
@@ -444,7 +402,7 @@ void MainFrame::Pass(wxCommandEvent& WXUNUSED(event))
 }
 
 void MainFrame::Nothing(wxMenuEvent& WXUNUSED(event))
-{	
+{	// Don't clear the status bar
 }
 
 void MainFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
@@ -466,7 +424,6 @@ void MainFrame::Random(wxCommandEvent& WXUNUSED(event))
 
 void MainFrame::NewGame(wxCommandEvent& WXUNUSED(event))
 {	initgame();
-	
 	wxClientDC dc(panel);
 	panel->DrawBoard(dc, board);
 }
