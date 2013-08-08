@@ -1,4 +1,8 @@
-simple-go: simple-go.cpp
-	g++ simple-go.cpp `wx-config --cppflags` `wx-config --libs` -o simple-go
+CPPFILES = $(wildcard *.cpp)
+OBJFILES = $(CPPFILES:.cpp=.o)
+simplego: $(OBJFILES)
+	g++ $(OBJFILES) `wx-config --libs` -o simplego
+%.o: %.cpp
+	g++ $< -c `wx-config --cxxflags`
 clean:
-	rm -f simple-go
+	rm -f simplego *.o
