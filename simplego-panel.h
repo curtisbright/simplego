@@ -9,45 +9,36 @@
 #define MIXEDAREA 6
 #define BOARDMEMORYLEN sizeof(char[21][21])
 
-enum {
-	ID_PASS = wxID_HIGHEST+1,
-	ID_GO_TO_MOVE = wxID_HIGHEST+2,
-	ID_NEW_GAME = wxID_HIGHEST+3,
-	ID_BOARD_SIZE = wxID_HIGHEST+4,
-	ID_RANDOM = wxID_HIGHEST+5,
-	ID_SUICIDE = wxID_HIGHEST+6
-};
-
 class SimpleGoFrame;
 
 class SimpleGoPanel : public wxPanel
 {
-public:
-	int curmove;
-	int totmove;
-	int boardsize;
+private:
+	SimpleGoFrame* frame;
 	char board[21][21];
 	char (*history)[21][21];
-	SimpleGoFrame* frame;
-
-	void updateboard();
-	void spreadarea(char board[21][21], int x, int y, int colour);
-	void scoregame(char board[21][21]);
-	void updateturn();
-	void removegroup(char board[21][21], int x, int y);
-	bool haslibertiesrec(char board[21][21], int x, int y);
-	bool hasliberties(char board[21][21], int x, int y);
-	bool validmove(int x, int y, char board[21][21]);
-	void makemove(int x, int y);
-	void makepass();
-	void initgame();
-
-	wxTimer* timer;
-	void LMouseUp(wxMouseEvent& event);
-	void Paint(wxPaintEvent& evt);
+	void SpreadArea(char board[21][21], int x, int y, int colour);
+	void ScoreGame(char board[21][21]);
+	void UpdateTurn();
+	void RemoveGroup(char board[21][21], int x, int y);
+	bool HasLibertiesRec(char board[21][21], int x, int y);
+	bool HasLiberties(char board[21][21], int x, int y);
+	bool ValidMove(int x, int y, char board[21][21]);
+	void MakeMove(int x, int y);
+	void Paint(wxPaintEvent& event);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc, char board[21][21]);
 	void OnIdle(wxIdleEvent& event);
-	void onKeyDown(wxKeyEvent& aEvent);
+	void LMouseUp(wxMouseEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
+	
+public:
+	wxTimer* timer;
+	int curmove;
+	int totmove;
+	int boardsize;
+	void UpdateBoard();
+	void MakePass();
+	void InitGame();
 	SimpleGoPanel(SimpleGoFrame* parent);
 };

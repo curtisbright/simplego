@@ -1,3 +1,5 @@
 class SimpleGoApp : public wxApp
-{	bool OnInit();
+{
+private:
+	bool OnInit();
 };

@@ -30,43 +30,39 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	
 	CreateStatusBar(3);
 	SetClientSize(320, 320);
-}
-
-void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
-{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", ""));
-	if(num>=0 && num<=panel->totmove)
-	{	panel->curmove = num;
-		panel->updateboard();
-	}
+	panel->InitGame();
 }
 
 void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
-{	panel->makepass();
+{	panel->MakePass();
+}
+
+void SimpleGoFrame::Random(wxCommandEvent& WXUNUSED(event))
+{	panel->timer->Start(1);
 }
 
 void SimpleGoFrame::Nothing(wxMenuEvent& WXUNUSED(event))
 {	// Don't clear the status bar
 }
 
+void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
+{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", ""));
+	if(num>=0 && num<=panel->totmove)
+	{	panel->curmove = num;
+		panel->UpdateBoard();
+	}
+}
+
+void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
+{	panel->InitGame();
+	panel->UpdateBoard();
+}
+
 void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
 {	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
 	if(num>=2&&num<=19)
 	{	panel->boardsize = num;
-		panel->initgame();
-		wxClientDC dc(panel);
-		panel->DrawBoard(dc, panel->board);
+		panel->InitGame();
+		panel->UpdateBoard();
 	}
-}
-
-void SimpleGoFrame::Random(wxCommandEvent& WXUNUSED(event))
-{	if(panel->timer->IsRunning())
-		panel->timer->Stop();
-	else
-		panel->timer->Start(1);
-}
-
-void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
-{	panel->initgame();
-	wxClientDC dc(panel);
-	panel->DrawBoard(dc, panel->board);
 }
