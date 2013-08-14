@@ -1,12 +1,14 @@
+// Board cell type constants
 #define EMPTY 0
 #define BLACK 1
 #define WHITE 2
-#define OPP(x) (3-x)
 #define BORDER 3
-#define AREAOFFSET 3
-#define BLACKAREA 4
-#define WHITEAREA 5
-#define MIXEDAREA 6
+// Opposite colour
+#define OPP(x) (3-x)
+// 'Area' cell types used in scoring process
+#define AREA(x) (x+3)
+#define MIXEDAREA AREA(BORDER)
+// Amount of memory used to store board
 #define BOARDMEMORYLEN sizeof(char[21][21])
 
 class SimpleGoFrame;
@@ -15,28 +17,28 @@ class SimpleGoPanel : public wxPanel
 {
 private:
 	SimpleGoFrame* frame;
-	char board[21][21];
-	char (*history)[21][21];
+	char board[21][21];			// Current board position
+	char (*history)[21][21];	// All previous board positions
 	void SpreadArea(char board[21][21], int x, int y, int colour);
 	void ScoreGame(char board[21][21]);
-	void UpdateTurn();
+	void UpdateStatus();
 	void RemoveGroup(char board[21][21], int x, int y);
 	bool HasLibertiesRec(char board[21][21], int x, int y);
 	bool HasLiberties(char board[21][21], int x, int y);
-	bool ValidMove(int x, int y, char board[21][21]);
+	bool ValidMove(char board[21][21], int x, int y);
 	void MakeMove(int x, int y);
 	void Paint(wxPaintEvent& event);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc, char board[21][21]);
-	void OnIdle(wxIdleEvent& event);
+	void Idle(wxIdleEvent& event);
 	void LMouseUp(wxMouseEvent& event);
-	void OnKeyDown(wxKeyEvent& event);
+	void KeyDown(wxKeyEvent& event);
 	
 public:
 	wxTimer* timer;
-	int curmove;
-	int totmove;
-	int boardsize;
+	int curmove;				// Current move number
+	int totmove;				// Total number of moves
+	int boardsize;				// Size of board
 	void UpdateBoard();
 	void MakePass();
 	void InitGame();
