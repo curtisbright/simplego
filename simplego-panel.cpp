@@ -7,11 +7,12 @@ SimpleGoPanel::SimpleGoPanel(SimpleGoFrame* parent) : wxPanel(parent)
 {	frame = parent;
 	timer = new wxTimer();
 	boardsize = 19;
+	history = NULL;
 	SetBackgroundColour(*wxWHITE);
 	Connect(wxEVT_PAINT, wxPaintEventHandler(SimpleGoPanel::Paint));
 	Connect(wxEVT_IDLE, wxIdleEventHandler(SimpleGoPanel::Idle), NULL, this);
 	Connect(wxEVT_LEFT_UP, wxMouseEventHandler(SimpleGoPanel::LMouseUp));
-	Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(SimpleGoPanel::KeyDown));
+	Connect(wxEVT_CHAR_HOOK, wxKeyEventHandler(SimpleGoPanel::KeyDown));
 }
 
 // Mark all area around the (x, y) cell as owned by colour
@@ -35,9 +36,10 @@ void SimpleGoPanel::SpreadArea(char board[21][21], int x, int y, int colour)
 // Calculate the score of the given board and update the status bar
 void SimpleGoPanel::ScoreGame(char board[21][21])
 {	char temp[21][21];
+	int i, j;
 	memcpy(temp, board, BOARDMEMORYLEN);
-	for(int i=1; i<=boardsize; i++)
-		for(int j=1; j<=boardsize; j++)
+	for(i=1; i<=boardsize; i++)
+		for(j=1; j<=boardsize; j++)
 			if(temp[i][j]==BLACK||temp[i][j]==WHITE)
 			{	SpreadArea(temp, i-1, j, temp[i][j]);
 				SpreadArea(temp, i, j-1, temp[i][j]);
@@ -46,9 +48,8 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 			}
 	
 	int whitescore = 0, blackscore = 0;
-	
-	for(int i=1; i<=boardsize; i++)
-		for(int j=1; j<=boardsize; j++)
+	for(i=1; i<=boardsize; i++)
+		for(j=1; j<=boardsize; j++)
 			if(temp[i][j]==BLACK||temp[i][j]==AREA(BLACK))
 				blackscore++;
 			else if(temp[i][j]==WHITE||temp[i][j]==AREA(WHITE))
@@ -214,7 +215,6 @@ void SimpleGoPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 // Draw the given board using the provided device context
 void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 {	int i, j;
-
 	for(i=1; i<20; i++)
 		for(j=1; j<20; j++)
 		{	if(i<=boardsize&&j<=boardsize)
@@ -305,10 +305,11 @@ void SimpleGoPanel::InitGame()
 	if(history!=NULL)
 		free(history);
 	history = (char(*)[21][21])malloc(BOARDMEMORYLEN);
-	for(int i=0; i<21; i++)
-		for(int j=0; j<21; j++)
+	int i, j;
+	for(i=0; i<21; i++)
+		for(j=0; j<21; j++)
 			board[i][j] = EMPTY;
-	for(int i=0; i<21; i++)
+	for(i=0; i<21; i++)
 		{	board[i][0] = BORDER;
 			board[i][boardsize+1] = BORDER;
 			board[0][i] = BORDER;
