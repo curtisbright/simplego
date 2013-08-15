@@ -1,0 +1,11 @@
+Simple Go: A simple implementation of the game Go
+by Curtis Bright
+
+Every Go player who is also a programmer ought to make a Go implementation sometime; this is mine.  Its main features are:
+
+* Cross-platform GUI using wxWidgets
+* Unlimited undo
+* Superko enforced
+* Option to allow suicide
+* Area scoring (though dead groups must be explictly killed)
+* Random mode where play continues until both players have no legal moves
