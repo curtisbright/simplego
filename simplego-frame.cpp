@@ -21,7 +21,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SetBoard));
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
-	Connect(ID_RANDOM, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Random));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(SimpleGoFrame::Nothing));
 	
 	menubar->Append(gamemenu, wxT("&Game"));
@@ -63,11 +62,6 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 	{	panel->curmove = num;
 		panel->UpdateBoard();
 	}
-}
-
-// Random! menu command
-void SimpleGoFrame::Random(wxCommandEvent& WXUNUSED(event))
-{	panel->timer->Start(1);
 }
 
 // Menu highlight event

@@ -35,7 +35,6 @@ private:
 	void KeyDown(wxKeyEvent& event);
 	
 public:
-	wxTimer* timer;
 	int curmove;				// Current move number
 	int totmove;				// Total number of moves
 	int boardsize;				// Size of board

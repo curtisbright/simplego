@@ -17,7 +17,6 @@ private:
 	void SetBoard(wxCommandEvent& event);
 	void Pass(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
-	void Random(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);
 
 public:

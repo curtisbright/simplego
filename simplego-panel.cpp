@@ -5,7 +5,6 @@
 // Panel constructor
 SimpleGoPanel::SimpleGoPanel(SimpleGoFrame* parent) : wxPanel(parent)
 {	frame = parent;
-	timer = new wxTimer();
 	boardsize = 19;
 	history = NULL;
 	SetBackgroundColour(*wxWHITE);
@@ -230,9 +229,7 @@ void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 // During idle time make random moves if Random! has been selected
 void SimpleGoPanel::Idle(wxIdleEvent& WXUNUSED(event))
 {	if(!frame->playmenu->IsChecked(ID_RANDOM))
-	{	timer->Stop();
 		return;
-	}
 
 	int x = 1+rand()%boardsize, y = 1+rand()%boardsize;
 	char attempts[21][21], temp[21][21];
