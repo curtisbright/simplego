@@ -227,7 +227,7 @@ void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 }
 
 // During idle time make random moves if Random! has been selected
-void SimpleGoPanel::Idle(wxIdleEvent& WXUNUSED(event))
+void SimpleGoPanel::Idle(wxIdleEvent& event)
 {	if(!frame->playmenu->IsChecked(ID_RANDOM))
 		return;
 
@@ -243,6 +243,7 @@ void SimpleGoPanel::Idle(wxIdleEvent& WXUNUSED(event))
 		memcpy(temp, board, BOARDMEMORYLEN);
 		if(ValidMove(temp, x, y))
 		{	MakeMove(x, y);
+			event.RequestMore();
 			return;
 		}
 		count++;
@@ -252,6 +253,7 @@ void SimpleGoPanel::Idle(wxIdleEvent& WXUNUSED(event))
 		frame->playmenu->Check(ID_RANDOM, false);
 
 	MakePass();
+	event.RequestMore();
 }
 
 // Process a left mouse click by making a move attempt at the appropriate cell
