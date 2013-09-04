@@ -1,8 +1,12 @@
-CPPFILES = $(wildcard *.cpp)
-OBJFILES = $(CPPFILES:.cpp=.o)
-simplego: $(OBJFILES)
-	g++ $(OBJFILES) `wx-config --libs` -o simplego
-%.o: %.cpp %.h simplego-panel.h simplego-frame.h
-	g++ $< -c `wx-config --cxxflags`
+simplego: simplego-app.o simplego-frame.o simplego-panel.o
+	g++ simplego-app.o simplego-frame.o simplego-panel.o `wx-config --libs` -o simplego
+simplego-app.o: simplego-app.cpp simplego-app.h simplego-frame.h
+	g++ simplego-app.cpp -c `wx-config --cxxflags`
+simplego-frame.o: simplego-frame.cpp simplego-frame.h simplego-panel.h
+	g++ simplego-frame.cpp -c `wx-config --cxxflags`
+simplego-panel.o: simplego-panel.cpp simplego-frame.h simplego-panel.h
+	g++ simplego-panel.cpp -c `wx-config --cxxflags`
 clean:
-	rm -f simplego *.o
+	rm -f simplego-app.o simplego-frame.o simplego-panel.o
+clear: clean
+	rm -f simplego
