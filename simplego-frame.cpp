@@ -27,7 +27,8 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	menubar->Append(playmenu, wxT("&Play"));
 	SetMenuBar(menubar);
 	
-	CreateStatusBar(3);
+	int styles[3] = {wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN};
+	CreateStatusBar(3)->SetStatusStyles(3, styles);
 	SetClientSize(320, 320);
 	panel->InitGame();
 	panel->UpdateBoard();
