@@ -1,4 +1,6 @@
 #include <wx/wx.h>
+#include <wx/aboutdlg.h>
+#include <wx/textfile.h>
 #include "simplego-frame.h"
 #include "simplego-panel.h"
 
@@ -16,11 +18,16 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_GO_TO_MOVE, wxT("&Go to move..."));
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
+	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."), "");
+	gamemenu->AppendSeparator();
+	gamemenu->Append(ID_ABOUT, wxT("Ab&out..."), "");
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SetBoard));
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
+	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
+	Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::About));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(SimpleGoFrame::Nothing));
 	
 	menubar->Append(gamemenu, wxT("&Game"));
@@ -63,6 +70,33 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 	{	panel->curmove = num;
 		panel->UpdateBoard();
 	}
+}
+
+// Save game menu command
+void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
+{	char str[15];
+	time_t rawtime;
+	time(&rawtime);
+	strftime(str, 15, "%y%m%d-1.sgf", localtime(&rawtime));
+	for(int i=2; wxFileExists(str); i++)
+		sprintf(str+6, "-%d.sgf", i);
+	
+	wxFileDialog SaveDialog(this, "Save Game", "", str, "*.sgf", wxFD_SAVE);
+	
+	if(SaveDialog.ShowModal()==wxID_OK)
+	{	wxTextFile file(str);
+		file.Write();
+		file.Close();
+	}
+}
+
+// Menu about event
+void SimpleGoFrame::About(wxCommandEvent& WXUNUSED(event))
+{	wxAboutDialogInfo info;
+    info.SetName("Simple Go");
+    info.SetDescription("A simple implementation of the game Go.\nby Curtis Bright");
+    info.SetWebSite("http://www.curtisbright.com/simplego/");
+    wxAboutBox(info);
 }
 
 // Menu highlight event
