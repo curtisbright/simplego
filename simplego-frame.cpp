@@ -85,6 +85,14 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 	
 	if(SaveDialog.ShowModal()==wxID_OK)
 	{	wxTextFile file(str);
+		file.AddLine(wxString::Format("(;FF[4]GM[1]SZ[%d]", panel->boardsize));
+		for(int i=0; i<panel->totmove; i++)
+		{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
+				file.AddLine(wxString::Format(";%c[]", i%2 ? 'W' : 'B'));
+			else
+				file.AddLine(wxString::Format(";%c[%c%c]", i%2 ? 'W' : 'B', panel->movelist[i].x+'a'-1, panel->movelist[i].y+'a'-1));
+		}
+		file.AddLine(")");
 		file.Write();
 		file.Close();
 	}
@@ -93,10 +101,10 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 // Menu about event
 void SimpleGoFrame::About(wxCommandEvent& WXUNUSED(event))
 {	wxAboutDialogInfo info;
-    info.SetName("Simple Go");
-    info.SetDescription("A simple implementation of the game Go.\nby Curtis Bright");
-    info.SetWebSite("http://www.curtisbright.com/simplego/");
-    wxAboutBox(info);
+	info.SetName("Simple Go");
+	info.SetDescription("A simple implementation of the game Go.\nby Curtis Bright");
+	info.SetWebSite("http://www.curtisbright.com/simplego/");
+	wxAboutBox(info);
 }
 
 // Menu highlight event

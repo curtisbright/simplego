@@ -7,6 +7,7 @@ SimpleGoPanel::SimpleGoPanel(SimpleGoFrame* parent) : wxPanel(parent)
 {	frame = parent;
 	boardsize = 19;
 	history = NULL;
+	movelist = NULL;
 	SetBackgroundColour(*wxWHITE);
 	Connect(wxEVT_PAINT, wxPaintEventHandler(SimpleGoPanel::Paint));
 	Connect(wxEVT_IDLE, wxIdleEventHandler(SimpleGoPanel::Idle), NULL, this);
@@ -153,8 +154,11 @@ void SimpleGoPanel::MakeMove(int x, int y)
 		}
 		
 		curmove++;
-		history = (char(*)[21][21])realloc(history, (curmove+1)*sizeof(char[21][21]));
+		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
 		memcpy(history[curmove], board, BOARDMEMORYLEN);
+		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+		movelist[curmove-1].x = x;
+		movelist[curmove-1].y = y;
 		totmove = curmove;
 		UpdateStatus();
 		ScoreGame(board);
@@ -293,6 +297,9 @@ void SimpleGoPanel::MakePass()
 {	curmove++;
 	history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
 	memcpy(history[curmove], board, BOARDMEMORYLEN);
+	movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+	movelist[curmove-1].x = 0;
+	movelist[curmove-1].y = 0;
 	totmove = curmove;
 	UpdateStatus();
 }
@@ -303,7 +310,10 @@ void SimpleGoPanel::InitGame()
 	totmove = 0;
 	if(history!=NULL)
 		free(history);
+	if(movelist!=NULL)
+		free(movelist);
 	history = (char(*)[21][21])malloc(BOARDMEMORYLEN);
+	movelist = (pos*)malloc(0);
 	int i, j;
 	for(i=0; i<21; i++)
 		for(j=0; j<21; j++)

@@ -19,6 +19,7 @@ private:
 	SimpleGoFrame* frame;
 	char board[21][21];			// Current board position
 	char (*history)[21][21];	// All previous board positions
+	struct pos {int x, y;};
 	void SpreadArea(char board[21][21], int x, int y, int colour);
 	void ScoreGame(char board[21][21]);
 	void UpdateStatus();
@@ -38,6 +39,7 @@ public:
 	int curmove;				// Current move number
 	int totmove;				// Total number of moves
 	int boardsize;				// Size of board
+	pos* movelist;				// All previous moves
 	void UpdateBoard();
 	void MakePass();
 	void InitGame();
