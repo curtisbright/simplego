@@ -1,5 +1,5 @@
 Simple Go: A simple implementation of the game Go
-by Curtis Bright
+by Curtis Bright, http://www.curtisbright.com/simplego/
 
 Every Go player who is also a programmer ought to make a Go implementation sometime; this is mine.  Its main features are:
 
