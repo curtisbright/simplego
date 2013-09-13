@@ -1,4 +1,4 @@
-WXDIR = ~/wxWidgets-2.9.5/
+WXDIR = #~/wxWidgets-2.9.5/
 simplego: simplego-app.o simplego-frame.o simplego-panel.o
 	g++ simplego-app.o simplego-frame.o simplego-panel.o `$(WXDIR)wx-config --libs` -o simplego
 simplego-app.o: simplego-app.cpp simplego-app.h simplego-frame.h
