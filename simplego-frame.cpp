@@ -102,7 +102,7 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 void SimpleGoFrame::About(wxCommandEvent& WXUNUSED(event))
 {	wxAboutDialogInfo info;
 	info.SetName("Simple Go");
-	info.SetDescription("A simple implementation of the game Go.\nby Curtis Bright");
+	info.SetDescription("A simple implementation of the game Go\nby Curtis Bright");
 	info.SetWebSite("http://www.curtisbright.com/simplego/");
 	wxAboutBox(info);
 }
