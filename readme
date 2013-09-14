@@ -8,4 +8,5 @@ Every Go player who is also a programmer ought to make a Go implementation somet
 * Superko enforced
 * Option to allow suicide
 * Area scoring (though dead groups must be explictly killed)
+* Can save games to SGF
 * Random mode where play continues until both players have no legal moves
