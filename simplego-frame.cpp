@@ -81,10 +81,10 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 	for(int i=2; wxFileExists(str); i++)
 		sprintf(str+6, "-%d.sgf", i);
 	
-	wxFileDialog SaveDialog(this, "Save Game", "", str, "*.sgf", wxFD_SAVE);
+	wxFileDialog SaveDialog(this, "Save Game", "", str, "*.sgf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	
 	if(SaveDialog.ShowModal()==wxID_OK)
-	{	wxTextFile file(str);
+	{	wxTextFile file(SaveDialog.GetPath());
 		file.AddLine(wxString::Format("(;FF[4]GM[1]SZ[%d]", panel->boardsize));
 		for(int i=0; i<panel->totmove; i++)
 		{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
