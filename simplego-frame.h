@@ -7,7 +7,8 @@ enum {
 	ID_RANDOM = wxID_HIGHEST+5,
 	ID_SUICIDE = wxID_HIGHEST+6,
 	ID_SAVE_GAME = wxID_HIGHEST+7,
-	ID_ABOUT = wxID_HIGHEST+8
+	ID_ABOUT = wxID_HIGHEST+8,
+	ID_GNUGO = wxID_HIGHEST+9
 };
 
 class SimpleGoPanel;
@@ -19,6 +20,7 @@ private:
 	void SetBoard(wxCommandEvent& event);
 	void Pass(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
+	void GNUGoMove(wxCommandEvent& event);
 	void SaveGame(wxCommandEvent& event);
 	void About(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);

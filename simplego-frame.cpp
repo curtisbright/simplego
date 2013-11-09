@@ -16,6 +16,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	gamemenu->Append(ID_BOARD_SIZE, wxT("&Board size..."));
 	playmenu->Append(ID_PASS, wxT("&Pass"));
 	playmenu->Append(ID_GO_TO_MOVE, wxT("&Go to move..."));
+	playmenu->Append(ID_GNUGO, wxT("&Make GNU Go move"));
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."), "");
@@ -26,6 +27,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SetBoard));
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
+	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
 	Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::About));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(SimpleGoFrame::Nothing));
@@ -70,6 +72,41 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 	{	panel->curmove = num;
 		panel->UpdateBoard();
 	}
+}
+
+// GNU Go move menu command
+void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
+{	int in[2], out[2], n;
+	char buf[256];
+	char data[256] = {0};
+
+	pipe(in);
+	pipe(out);
+
+	if((pid=fork())==0)
+	{	close(0);
+		close(1);
+		close(2);
+		dup2(in[0],0);
+		dup2(out[1],1);
+		dup2(out[1],2);
+		close(in[1]);
+		close(out[0]);
+		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", (char*)NULL);
+	}
+	
+	close(in[0]);
+	close(out[1]);
+
+	write(in[1], "genmove black", strlen("genmove black"));
+	
+	close(in[1]);
+
+	while(n = read(out[0], buf, 256))
+	{	buf[n] = 0;
+		strcat(data, buf);
+	}
+	printf("%s", data);
 }
 
 // Save game menu command
