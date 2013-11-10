@@ -8,7 +8,8 @@ enum {
 	ID_SUICIDE = wxID_HIGHEST+6,
 	ID_SAVE_GAME = wxID_HIGHEST+7,
 	ID_ABOUT = wxID_HIGHEST+8,
-	ID_GNUGO = wxID_HIGHEST+9
+	ID_GNUGO = wxID_HIGHEST+9,
+	ID_GNUGO_WHITE = wxID_HIGHEST+10
 };
 
 class SimpleGoPanel;
@@ -21,6 +22,7 @@ private:
 	void Pass(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
 	void GNUGoMove(wxCommandEvent& event);
+	void GNUGoWhite(wxCommandEvent& event);
 	void SaveGame(wxCommandEvent& event);
 	void About(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);
@@ -28,6 +30,7 @@ private:
 public:
 	wxMenu* gamemenu;
 	wxMenu* playmenu;
+	void MakeGNUGoMove();
 	SimpleGoPanel* panel;
 	SimpleGoFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
 };

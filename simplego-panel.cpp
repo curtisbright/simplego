@@ -271,6 +271,8 @@ void SimpleGoPanel::MakePass()
 	movelist[curmove-1].y = 0;
 	totmove = curmove;
 	UpdateStatus();
+	if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
+			frame->MakeGNUGoMove();
 }
 
 // Make a move on cell (x, y) if legal, and update the current board info and history
@@ -301,6 +303,8 @@ void SimpleGoPanel::MakeMove(int x, int y)
 		totmove = curmove;
 		UpdateStatus();
 		ScoreGame(board);
+		if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
+			frame->MakeGNUGoMove();
 	}
 }
 

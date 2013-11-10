@@ -19,6 +19,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_GNUGO, wxT("&Make GNU Go move"));
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
+	gamemenu->Append(ID_GNUGO_WHITE, wxT("GNU Go plays &White"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."), "");
 	gamemenu->AppendSeparator();
 	gamemenu->Append(ID_ABOUT, wxT("Ab&out..."), "");
@@ -28,6 +29,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
+	Connect(ID_GNUGO_WHITE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoWhite));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
 	Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::About));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(SimpleGoFrame::Nothing));
@@ -43,42 +45,11 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	panel->UpdateBoard();
 }
 
-// New game menu command
-void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
-{	panel->InitGame();
-	panel->UpdateBoard();
-}
-
-// Board size... menu command
-void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
-{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
-	if(num>=2&&num<=19)
-	{	panel->boardsize = num;
-		panel->InitGame();
-		panel->UpdateBoard();
-	}
-}
-
-// Pass menu command
-void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
-{	panel->MakePass();
-}
-
-// Go to move... menu command
-void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
-{	long num;
-	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num, 10)
-	   && num>=0 && num<=panel->totmove)
-	{	panel->curmove = num;
-		panel->UpdateBoard();
-	}
-}
-
-// GNU Go move menu command
-void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::MakeGNUGoMove()
 {	int in[2], out[2], n;
 	char buf[256];
 	char data[256] = {0};
+	char str[17];
 
 	pipe(in);
 	pipe(out);
@@ -99,7 +70,6 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
 	close(in[0]);
 	close(out[1]);
 
-	char str[17];
 	sprintf(str, "boardsize %d\n", panel->boardsize);
 	write(in[1], str, strlen(str));
 
@@ -137,6 +107,48 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
 		}
 	}
 	close(out[0]);
+}
+
+// New game menu command
+void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
+{	panel->InitGame();
+	panel->UpdateBoard();
+}
+
+// Board size... menu command
+void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
+{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
+	if(num>=2&&num<=19)
+	{	panel->boardsize = num;
+		panel->InitGame();
+		panel->UpdateBoard();
+	}
+}
+
+// Pass menu command
+void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
+{	panel->MakePass();
+}
+
+// Go to move... menu command
+void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
+{	long num;
+	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num, 10)
+	   && num>=0 && num<=panel->totmove)
+	{	panel->curmove = num;
+		panel->UpdateBoard();
+	}
+}
+
+// GNU Go move menu command
+void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
+{	MakeGNUGoMove();
+}
+
+// GNU Go plays White menu command
+void SimpleGoFrame::GNUGoWhite(wxCommandEvent& WXUNUSED(event))
+{	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
+		MakeGNUGoMove();
 }
 
 // Save game menu command
