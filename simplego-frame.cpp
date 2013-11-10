@@ -64,7 +64,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		close(in[1]);
 		close(out[0]);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
-		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", str, NULL);
+		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, NULL);
 	}
 	
 	close(in[0]);
