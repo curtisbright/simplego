@@ -92,7 +92,8 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
 		dup2(out[1],2);
 		close(in[1]);
 		close(out[0]);
-		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", (char*)NULL);
+		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
+		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", str, NULL);
 	}
 	
 	close(in[0]);
