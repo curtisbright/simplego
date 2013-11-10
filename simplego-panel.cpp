@@ -134,37 +134,6 @@ bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y)
 	return !dupe;
 }
 
-// Make a move on cell (x, y) if legal, and update the current board info and history
-void SimpleGoPanel::MakeMove(int x, int y)
-{	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
-		return;
-	char temp[21][21];
-	memcpy(temp, board, BOARDMEMORYLEN);
-	
-	if(ValidMove(temp, x, y))
-	{	board[x][y] = curmove%2+1;
-		wxClientDC dc(this);
-		DrawStone(dc, x, y, curmove%2+1);
-		if(memcmp(temp, board, BOARDMEMORYLEN))
-		{	for(int i=0; i<21; i++)
-				for(int j=0; j<21; j++)
-					if(temp[i][j]!=board[i][j])
-						DrawStone(dc, i, j, temp[i][j]);
-			memcpy(board, temp, BOARDMEMORYLEN);
-		}
-		
-		curmove++;
-		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
-		memcpy(history[curmove], board, BOARDMEMORYLEN);
-		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
-		movelist[curmove-1].x = x;
-		movelist[curmove-1].y = y;
-		totmove = curmove;
-		UpdateStatus();
-		ScoreGame(board);
-	}
-}
-
 // Process paint event by redrawing the board
 void SimpleGoPanel::Paint(wxPaintEvent& WXUNUSED(event))
 {	wxPaintDC dc(this);
@@ -302,6 +271,37 @@ void SimpleGoPanel::MakePass()
 	movelist[curmove-1].y = 0;
 	totmove = curmove;
 	UpdateStatus();
+}
+
+// Make a move on cell (x, y) if legal, and update the current board info and history
+void SimpleGoPanel::MakeMove(int x, int y)
+{	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
+		return;
+	char temp[21][21];
+	memcpy(temp, board, BOARDMEMORYLEN);
+	
+	if(ValidMove(temp, x, y))
+	{	board[x][y] = curmove%2+1;
+		wxClientDC dc(this);
+		DrawStone(dc, x, y, curmove%2+1);
+		if(memcmp(temp, board, BOARDMEMORYLEN))
+		{	for(int i=0; i<21; i++)
+				for(int j=0; j<21; j++)
+					if(temp[i][j]!=board[i][j])
+						DrawStone(dc, i, j, temp[i][j]);
+			memcpy(board, temp, BOARDMEMORYLEN);
+		}
+		
+		curmove++;
+		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
+		memcpy(history[curmove], board, BOARDMEMORYLEN);
+		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+		movelist[curmove-1].x = x;
+		movelist[curmove-1].y = y;
+		totmove = curmove;
+		UpdateStatus();
+		ScoreGame(board);
+	}
 }
 
 // Initialize the current board and history variables

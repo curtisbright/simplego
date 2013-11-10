@@ -27,7 +27,6 @@ private:
 	bool HasLibertiesRec(char board[21][21], int x, int y);
 	bool HasLiberties(char board[21][21], int x, int y);
 	bool ValidMove(char board[21][21], int x, int y);
-	void MakeMove(int x, int y);
 	void Paint(wxPaintEvent& event);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc, char board[21][21]);
@@ -42,6 +41,7 @@ public:
 	pos* movelist;				// All previous moves
 	void UpdateBoard();
 	void MakePass();
+	void MakeMove(int x, int y);
 	void InitGame();
 	SimpleGoPanel(SimpleGoFrame* parent);
 };

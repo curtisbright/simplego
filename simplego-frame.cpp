@@ -83,7 +83,7 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
 	pipe(in);
 	pipe(out);
 
-	if((pid=fork())==0)
+	if(fork()==0)
 	{	close(0);
 		close(1);
 		close(2);
@@ -98,15 +98,44 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
 	close(in[0]);
 	close(out[1]);
 
-	write(in[1], "genmove black", strlen("genmove black"));
+	char str[17];
+	sprintf(str, "boardsize %d\n", panel->boardsize);
+	write(in[1], str, strlen(str));
+
+	for(int i=0; i<panel->curmove; i++)
+	{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
+			sprintf(str, "play %s pass\n", i%2 ? "white" : "black");
+		else
+			sprintf(str, "play %s %c%d\n", i%2 ? "white" : "black", panel->movelist[i].x+'A'-1+(panel->movelist[i].x>8 ? 1 : 0), (panel->boardsize+1)-panel->movelist[i].y);
+		write(in[1], str, strlen(str));
+	}
+
+	sprintf(str, "genmove black\n");
+	write(in[1], str, strlen(str));
 	
 	close(in[1]);
 
-	while(n = read(out[0], buf, 256))
-	{	buf[n] = 0;
-		strcat(data, buf);
+	int count = 0;
+	while(read(out[0], buf, 1))
+	{	//printf("%c", buf[0]);
+		if(buf[0] == '=')
+			count++;
+		if(count == panel->curmove+2)
+		{	while(n = read(out[0], buf, 255))
+			{	buf[n] = '\0';
+				strcat(data, buf);
+			}
+			//printf("%s", data);
+			if(data[1]>='A' && data[1]<='T' && data[2]>='1' && data[2]<='9')
+			{	int x = data[1]-'A'+1-(data[1]>'H' ? 1 : 0);
+				int y = (panel->boardsize+1)-atoi(data+2);
+				panel->MakeMove(x, y);
+			}
+			else
+				panel->MakePass();
+		}
 	}
-	printf("%s", data);
+	close(out[0]);
 }
 
 // Save game menu command
