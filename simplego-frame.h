@@ -9,7 +9,8 @@ enum {
 	ID_SAVE_GAME = wxID_HIGHEST+7,
 	ID_ABOUT = wxID_HIGHEST+8,
 	ID_GNUGO = wxID_HIGHEST+9,
-	ID_GNUGO_WHITE = wxID_HIGHEST+10
+	ID_GNUGO_WHITE = wxID_HIGHEST+10,
+	ID_LOAD_GAME = wxID_HIGHEST+11,
 };
 
 class SimpleGoPanel;
@@ -23,6 +24,7 @@ private:
 	void GoToMove(wxCommandEvent& event);
 	void GNUGoMove(wxCommandEvent& event);
 	void GNUGoWhite(wxCommandEvent& event);
+	void LoadGame(wxCommandEvent& event);
 	void SaveGame(wxCommandEvent& event);
 	void About(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);

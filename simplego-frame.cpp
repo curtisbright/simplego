@@ -20,6 +20,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_GNUGO_WHITE, wxT("GNU Go plays &White"), "", wxITEM_CHECK);
+	gamemenu->Append(ID_LOAD_GAME, wxT("&Load game..."), "");
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."), "");
 	gamemenu->AppendSeparator();
 	gamemenu->Append(ID_ABOUT, wxT("Ab&out..."), "");
@@ -30,6 +31,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
 	Connect(ID_GNUGO_WHITE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoWhite));
+	Connect(ID_LOAD_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::LoadGame));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
 	Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::About));
 	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(SimpleGoFrame::Nothing));
@@ -45,6 +47,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	panel->UpdateBoard();
 }
 
+// Run GNU Go and have it play the next move
 void SimpleGoFrame::MakeGNUGoMove()
 {	int in[2], out[2], n;
 	char buf[256];
@@ -133,7 +136,7 @@ void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
 // Go to move... menu command
 void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 {	long num;
-	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num, 10)
+	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num)
 	   && num>=0 && num<=panel->totmove)
 	{	panel->curmove = num;
 		panel->UpdateBoard();
@@ -149,6 +152,41 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
 void SimpleGoFrame::GNUGoWhite(wxCommandEvent& WXUNUSED(event))
 {	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
 		MakeGNUGoMove();
+}
+
+// Load game menu command
+void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
+{	char str[15];
+		
+	wxFileDialog LoadDialog(this, "Load Game", "", str, "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	
+	if(LoadDialog.ShowModal()==wxID_OK)
+	{	wxTextFile file(LoadDialog.GetPath());
+		file.Open();
+		for(int i=0; i<file.GetLineCount(); i++)
+		{	wxString line = file.GetLine(i);
+			for(int j=0; j<line.Len(); j++)
+			{	wxString substr = line.Mid(j, 3);
+				if(substr.Cmp("SZ[")==0)
+				{	long num;
+					line.Mid(j+3, 2).ToLong(&num);
+					panel->boardsize = num;
+					panel->InitGame();
+					panel->UpdateBoard();
+				}
+				else if(substr.Cmp(";B[")==0 || substr.Cmp(";W[")==0)
+				{	if(line.Mid(j+2, 2).Cmp("[]")==0)
+						panel->MakePass();
+					else if(line.Mid(j+3, 1).Cmp("a")>=0 && line.Mid(j+3, 1).Cmp("s")<=0 && line.Mid(j+4, 1).Cmp("a")>=0 && line.Mid(j+4, 1).Cmp("s")<=0)
+					{	int x = line.Mid(j+3, 1).GetChar(0) - 'a' + 1;
+						int y = line.Mid(j+4, 1).GetChar(0) - 'a' + 1;
+						panel->MakeMove(x, y);
+					}
+				}
+			}
+		}
+		file.Close();
+	}
 }
 
 // Save game menu command
