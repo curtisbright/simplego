@@ -84,7 +84,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		write(in[1], str, strlen(str));
 	}
 
-	sprintf(str, "genmove black\n");
+	sprintf(str, "genmove %s\n", panel->curmove%2 ? "white" : "black");
 	write(in[1], str, strlen(str));
 	
 	close(in[1]);
