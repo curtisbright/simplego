@@ -20,6 +20,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_GNUGO_WHITE, wxT("GNU Go plays &White"), "", wxITEM_CHECK);
+	gamemenu->Append(ID_SCORE_GAME, wxT("S&core game"));
 	gamemenu->Append(ID_LOAD_GAME, wxT("&Load game..."), "");
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."), "");
 	gamemenu->AppendSeparator();
@@ -31,6 +32,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
 	Connect(ID_GNUGO_WHITE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoWhite));
+	Connect(ID_SCORE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::ScoreGame));
 	Connect(ID_LOAD_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::LoadGame));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
 	Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::About));
@@ -154,6 +156,91 @@ void SimpleGoFrame::GNUGoWhite(wxCommandEvent& WXUNUSED(event))
 		MakeGNUGoMove();
 }
 
+// Score game menu command
+void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
+{	int in[2], out[2], n;
+	char buf[256];
+	char data[2048] = {0};
+	char str[17];
+
+	pipe(in);
+	pipe(out);
+
+	if(fork()==0)
+	{	close(0);
+		close(1);
+		close(2);
+		dup2(in[0],0);
+		dup2(out[1],1);
+		dup2(out[1],2);
+		close(in[1]);
+		close(out[0]);
+		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
+		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, NULL);
+	}
+	
+	close(in[0]);
+	close(out[1]);
+
+	sprintf(str, "boardsize %d\n", panel->boardsize);
+	write(in[1], str, strlen(str));
+
+	for(int i=0; i<panel->curmove; i++)
+	{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
+			sprintf(str, "play %s pass\n", i%2 ? "white" : "black");
+		else
+			sprintf(str, "play %s %c%d\n", i%2 ? "white" : "black", panel->movelist[i].x+'A'-1+(panel->movelist[i].x>8 ? 1 : 0), (panel->boardsize+1)-panel->movelist[i].y);
+		write(in[1], str, strlen(str));
+	}
+
+	sprintf(str, "final_status_list white_territory\n");
+	write(in[1], str, strlen(str));
+	sprintf(str, "final_status_list black_territory\n");
+	write(in[1], str, strlen(str));
+	sprintf(str, "final_status_list dead\n");
+	write(in[1], str, strlen(str));
+	
+	close(in[1]);
+
+	int i, j;
+	for(i=0; i<21; i++)
+		for(j=0; j<21; j++)
+			panel->gnugoboard[i][j] = EMPTY;
+	panel->gnugoscore = true;
+
+	int count = 0;
+	while(read(out[0], buf, 1))
+	{	if(buf[0] == '=')
+			count++;
+		if(count == panel->curmove+2)
+		{	while(n = read(out[0], buf, 255))
+			{	buf[n] = '\0';
+				strcat(data, buf);
+			}
+			count = 0;
+			int i;
+			for(i=0; i<strlen(data)-1; i++)
+			{	if(data[i] == '=')
+					count++;
+				if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
+				{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
+					int y = (panel->boardsize+1)-atoi(data+i+1);
+					
+					if(count==0)
+						panel->gnugoboard[x][y] = WHITE;
+					else if(count==1)
+						panel->gnugoboard[x][y] = BLACK;
+					else if(count==2)
+						panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
+				}
+			}
+		}
+	}
+	close(out[0]);
+	
+	panel->UpdateBoard();
+}
+
 // Load game menu command
 void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
 {	char str[15];
@@ -174,7 +261,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
 					panel->InitGame();
 					panel->UpdateBoard();
 				}
-				else if(substr.Cmp(";B[")==0 || substr.Cmp(";W[")==0)
+				else if((substr.Find("B[")==1 || substr.Find("W[")==1) && !(substr.GetChar(0)>='A' && substr.GetChar(0)<='Z'))
 				{	if(line.Mid(j+2, 2).Cmp("[]")==0)
 						panel->MakePass();
 					else if(line.Mid(j+3, 1).Cmp("a")>=0 && line.Mid(j+3, 1).Cmp("s")<=0 && line.Mid(j+4, 1).Cmp("a")>=0 && line.Mid(j+4, 1).Cmp("s")<=0)

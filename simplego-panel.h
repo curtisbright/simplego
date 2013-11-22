@@ -17,7 +17,6 @@ class SimpleGoPanel : public wxPanel
 {
 private:
 	SimpleGoFrame* frame;
-	char board[21][21];			// Current board position
 	char (*history)[21][21];	// All previous board positions
 	struct pos {int x, y;};
 	void SpreadArea(char board[21][21], int x, int y, int colour);
@@ -39,6 +38,9 @@ public:
 	int totmove;				// Total number of moves
 	int boardsize;				// Size of board
 	pos* movelist;				// All previous moves
+	char board[21][21];			// Current board position
+	char gnugoboard[21][21];	// GNU Go board report
+	bool gnugoscore;
 	void UpdateBoard();
 	void MakePass();
 	void MakeMove(int x, int y);
