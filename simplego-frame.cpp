@@ -140,7 +140,8 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 {	long num;
 	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num)
 	   && num>=0 && num<=panel->totmove)
-	{	panel->curmove = num;
+	{	panel->gnugoscore = false;
+		panel->curmove = num;
 		panel->UpdateBoard();
 	}
 }
