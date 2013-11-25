@@ -251,6 +251,8 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
 	if(LoadDialog.ShowModal()==wxID_OK)
 	{	wxTextFile file(LoadDialog.GetPath());
 		file.Open();
+		bool prevgnugoplay = gamemenu->IsChecked(ID_GNUGO_WHITE);
+		gamemenu->Check(ID_GNUGO_WHITE, false);
 		for(int i=0; i<file.GetLineCount(); i++)
 		{	wxString line = file.GetLine(i);
 			for(int j=0; j<line.Len(); j++)
@@ -274,6 +276,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
 			}
 		}
 		file.Close();
+		gamemenu->Check(ID_GNUGO_WHITE, prevgnugoplay);
 	}
 }
 
