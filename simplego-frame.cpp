@@ -54,7 +54,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 {	int in[2], out[2], n;
 	char buf[256];
 	char data[256] = {0};
-	char str[17];
+	char str[256];
 
 	pipe(in);
 	pipe(out);
@@ -162,7 +162,7 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 {	int in[2], out[2], n;
 	char buf[256];
 	char data[2048] = {0};
-	char str[17];
+	char str[256];
 
 	pipe(in);
 	pipe(out);
