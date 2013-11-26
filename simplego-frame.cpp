@@ -1,7 +1,9 @@
 #include <wx/wx.h>
 #include <wx/aboutdlg.h>
 #include <wx/textfile.h>
+#ifndef __WXMSW__
 #include <sys/resource.h>
+#endif
 #include "simplego-frame.h"
 #include "simplego-panel.h"
 
@@ -26,6 +28,12 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."), "");
 	gamemenu->AppendSeparator();
 	gamemenu->Append(ID_ABOUT, wxT("Ab&out..."), "");
+	
+	#ifdef __WXMSW__
+	playmenu->Enable(ID_GNUGO, false);
+	gamemenu->Enable(ID_GNUGO_WHITE, false);
+	gamemenu->Enable(ID_SCORE_GAME, false);
+	#endif
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SetBoard));
@@ -57,6 +65,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 	char data[256] = {0};
 	char str[256];
 
+	#ifndef __WXMSW__
 	pipe(in);
 	pipe(out);
 
@@ -114,6 +123,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		}
 	}
 	close(out[0]);
+	#endif
 }
 
 // Run GNU Go and have it score the game
@@ -123,6 +133,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 	char data[2048] = {0};
 	char str[256];
 
+	#ifndef __WXMSW__
 	pipe(in);
 	pipe(out);
 
@@ -201,6 +212,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 	{	panel->gnugoscore = true;
 		panel->UpdateBoard();
 	}
+	#endif
 }
 
 // New game menu command
