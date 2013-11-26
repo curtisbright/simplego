@@ -306,6 +306,7 @@ void SimpleGoPanel::MakePass()
 	UpdateStatus();
 	if(curmove>=2 && movelist[curmove-2].x==0 && movelist[curmove-2].y==0)
 	{	frame->playmenu->Check(ID_RANDOM, false);
+		frame->MakeGNUGoScore();
 	}
 	if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
 		frame->MakeGNUGoMove();

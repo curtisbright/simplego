@@ -35,6 +35,7 @@ public:
 	wxMenu* gamemenu;
 	wxMenu* playmenu;
 	void MakeGNUGoMove();
+	void MakeGNUGoScore();
 	SimpleGoPanel* panel;
 	SimpleGoFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
 };

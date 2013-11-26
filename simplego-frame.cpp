@@ -116,51 +116,8 @@ void SimpleGoFrame::MakeGNUGoMove()
 	close(out[0]);
 }
 
-// New game menu command
-void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
-{	panel->InitGame();
-	panel->UpdateBoard();
-}
-
-// Board size... menu command
-void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
-{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
-	if(num>=2&&num<=19)
-	{	panel->boardsize = num;
-		panel->InitGame();
-		panel->UpdateBoard();
-	}
-}
-
-// Pass menu command
-void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
-{	panel->MakePass();
-}
-
-// Go to move... menu command
-void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
-{	long num;
-	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num)
-	   && num>=0 && num<=panel->totmove)
-	{	panel->gnugoscore = false;
-		panel->curmove = num;
-		panel->UpdateBoard();
-	}
-}
-
-// GNU Go move menu command
-void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
-{	MakeGNUGoMove();
-}
-
-// GNU Go plays White menu command
-void SimpleGoFrame::GNUGoWhite(wxCommandEvent& WXUNUSED(event))
-{	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
-		MakeGNUGoMove();
-}
-
-// Score game menu command
-void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
+// Run GNU Go and have it score the game
+void SimpleGoFrame::MakeGNUGoScore()
 {	int in[2], out[2], n;
 	char buf[256];
 	char data[2048] = {0};
@@ -244,6 +201,54 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 	{	panel->gnugoscore = true;
 		panel->UpdateBoard();
 	}
+}
+
+// New game menu command
+void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
+{	panel->InitGame();
+	panel->UpdateBoard();
+}
+
+// Board size... menu command
+void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
+{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
+	if(num>=2&&num<=19)
+	{	panel->boardsize = num;
+		panel->InitGame();
+		panel->UpdateBoard();
+	}
+}
+
+// Pass menu command
+void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
+{	panel->MakePass();
+}
+
+// Go to move... menu command
+void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
+{	long num;
+	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num)
+	   && num>=0 && num<=panel->totmove)
+	{	panel->gnugoscore = false;
+		panel->curmove = num;
+		panel->UpdateBoard();
+	}
+}
+
+// GNU Go move menu command
+void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
+{	MakeGNUGoMove();
+}
+
+// GNU Go plays White menu command
+void SimpleGoFrame::GNUGoWhite(wxCommandEvent& WXUNUSED(event))
+{	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
+		MakeGNUGoMove();
+}
+
+// Score game menu command
+void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
+{	MakeGNUGoScore();
 }
 
 // Load game menu command
