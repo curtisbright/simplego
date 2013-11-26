@@ -291,7 +291,11 @@ void SimpleGoPanel::UpdateBoard()
 
 // Pass the current turn and update the status bar and history
 void SimpleGoPanel::MakePass()
-{	gnugoscore = false;
+{	if(gnugoscore)
+	{	gnugoscore = false;
+		wxClientDC dc(this);
+		DrawBoard(dc, board);
+	}
 	curmove++;
 	history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
 	memcpy(history[curmove], board, BOARDMEMORYLEN);
@@ -326,7 +330,10 @@ void SimpleGoPanel::MakeMove(int x, int y)
 			memcpy(board, temp, BOARDMEMORYLEN);
 		}
 		
-		gnugoscore = false;
+		if(gnugoscore)
+		{	gnugoscore = false;
+			DrawBoard(dc, board);
+		}
 		curmove++;
 		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
 		memcpy(history[curmove], board, BOARDMEMORYLEN);
