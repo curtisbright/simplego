@@ -1,6 +1,7 @@
 #include <wx/wx.h>
 #include <wx/aboutdlg.h>
 #include <wx/textfile.h>
+#include <sys/resource.h>
 #include "simplego-frame.h"
 #include "simplego-panel.h"
 
@@ -60,14 +61,15 @@ void SimpleGoFrame::MakeGNUGoMove()
 	pipe(out);
 
 	if(fork()==0)
-	{	close(0);
-		close(1);
-		close(2);
-		dup2(in[0],0);
-		dup2(out[1],1);
-		dup2(out[1],2);
+	{	close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		dup2(in[0], STDIN_FILENO);
+		dup2(out[1], STDOUT_FILENO);
 		close(in[1]);
 		close(out[0]);
+		struct rlimit limit; 
+		limit.rlim_cur = 3;
+		setrlimit(RLIMIT_CPU, &limit);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
 		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, NULL);
 	}
@@ -168,14 +170,15 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 	pipe(out);
 
 	if(fork()==0)
-	{	close(0);
-		close(1);
-		close(2);
-		dup2(in[0],0);
-		dup2(out[1],1);
-		dup2(out[1],2);
+	{	close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		dup2(in[0], STDIN_FILENO);
+		dup2(out[1], STDOUT_FILENO);
 		close(in[1]);
 		close(out[0]);
+		struct rlimit limit; 
+		limit.rlim_cur = 3;
+		setrlimit(RLIMIT_CPU, &limit);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
 		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, NULL);
 	}
@@ -207,7 +210,6 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 	for(i=0; i<21; i++)
 		for(j=0; j<21; j++)
 			panel->gnugoboard[i][j] = EMPTY;
-	panel->gnugoscore = true;
 
 	int count = 0;
 	while(read(out[0], buf, 1))
@@ -218,7 +220,6 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 			{	buf[n] = '\0';
 				strcat(data, buf);
 			}
-			count = 0;
 			int i;
 			for(i=0; i<strlen(data)-1; i++)
 			{	if(data[i] == '=')
@@ -227,11 +228,11 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 				{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
 					int y = (panel->boardsize+1)-atoi(data+i+1);
 					
-					if(count==0)
+					if(count == panel->curmove+2)
 						panel->gnugoboard[x][y] = WHITE;
-					else if(count==1)
+					else if(count == panel->curmove+3)
 						panel->gnugoboard[x][y] = BLACK;
-					else if(count==2)
+					else if(count == panel->curmove+4)
 						panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
 				}
 			}
@@ -239,7 +240,10 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 	}
 	close(out[0]);
 	
-	panel->UpdateBoard();
+	if(count == panel->curmove+4)
+	{	panel->gnugoscore = true;
+		panel->UpdateBoard();
+	}
 }
 
 // Load game menu command
