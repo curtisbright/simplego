@@ -44,6 +44,7 @@ public:
 	void UpdateBoard();
 	void MakePass();
 	void MakeMove(int x, int y);
+	void MakeMoveQuiet(int x, int y);
 	void InitGame();
 	SimpleGoPanel(SimpleGoFrame* parent);
 };

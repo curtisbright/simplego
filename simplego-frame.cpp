@@ -274,13 +274,14 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
 					else if(line.Mid(j+3, 1).Cmp("a")>=0 && line.Mid(j+3, 1).Cmp("s")<=0 && line.Mid(j+4, 1).Cmp("a")>=0 && line.Mid(j+4, 1).Cmp("s")<=0)
 					{	int x = line.Mid(j+3, 1).GetChar(0) - 'a' + 1;
 						int y = line.Mid(j+4, 1).GetChar(0) - 'a' + 1;
-						panel->MakeMove(x, y);
+						panel->MakeMoveQuiet(x, y);
 					}
 				}
 			}
 		}
 		file.Close();
 		gamemenu->Check(ID_GNUGO_WHITE, prevgnugoplay);
+		panel->UpdateBoard();
 	}
 }
 

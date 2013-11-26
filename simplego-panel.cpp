@@ -348,6 +348,26 @@ void SimpleGoPanel::MakeMove(int x, int y)
 	}
 }
 
+// Make a move on cell (x, y) if legal, and update the current board info and history,
+// but don't update the GUI
+void SimpleGoPanel::MakeMoveQuiet(int x, int y)
+{	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
+		return;
+	char temp[21][21];
+	memcpy(temp, board, BOARDMEMORYLEN);
+	
+	if(ValidMove(temp, x, y))
+	{	memcpy(board, temp, BOARDMEMORYLEN);
+		curmove++;
+		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
+		memcpy(history[curmove], board, BOARDMEMORYLEN);
+		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+		movelist[curmove-1].x = x;
+		movelist[curmove-1].y = y;
+		totmove = curmove;
+	}
+}
+
 // Initialize the current board and history variables
 void SimpleGoPanel::InitGame()
 {	gnugoscore = false;
