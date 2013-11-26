@@ -313,7 +313,7 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 						score++;
 					else if(panel->gnugoboard[i][j]==WHITE||(panel->gnugoboard[i][j]==EMPTY&&panel->board[i][j]==WHITE))
 						score--;
-			file.AddLine(wxString::Format("KM[6.5]RE[%c+%d.5]", score>0 ? 'B' : 'W', score>0 ? score-1 : score));
+			file.AddLine(wxString::Format("KM[6.5]RE[%c+%d.5]", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
 		}
 		for(int i=0; i<panel->totmove; i++)
 		{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
