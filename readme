@@ -4,9 +4,10 @@ by Curtis Bright, http://www.curtisbright.com/simplego/
 Every Go player who is also a programmer ought to make a Go implementation sometime; this is mine.  Its main features are:
 
 * Cross-platform GUI using wxWidgets
+* Play against GNU Go on Linux
 * Unlimited undo
 * Superko enforced
 * Option to allow suicide
-* Area scoring (though dead groups must be explictly killed)
-* Can save games to SGF
+* Area scoring using GNU Go on Linux (dead groups must be explictly killed on Windows)
+* Load and save SGF files
 * Random mode where play continues until both players have no legal moves

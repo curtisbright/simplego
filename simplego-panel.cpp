@@ -35,27 +35,41 @@ void SimpleGoPanel::SpreadArea(char board[21][21], int x, int y, int colour)
 
 // Calculate the score of the given board and update the status bar
 void SimpleGoPanel::ScoreGame(char board[21][21])
-{	char temp[21][21];
-	int i, j;
-	memcpy(temp, board, BOARDMEMORYLEN);
-	for(i=1; i<=boardsize; i++)
-		for(j=1; j<=boardsize; j++)
-			if(temp[i][j]==BLACK||temp[i][j]==WHITE)
-			{	SpreadArea(temp, i-1, j, temp[i][j]);
-				SpreadArea(temp, i, j-1, temp[i][j]);
-				SpreadArea(temp, i+1, j, temp[i][j]);
-				SpreadArea(temp, i, j+1, temp[i][j]);
-			}
-	
-	int whitescore = 0, blackscore = 0;
-	for(i=1; i<=boardsize; i++)
-		for(j=1; j<=boardsize; j++)
-			if(temp[i][j]==BLACK||temp[i][j]==AREA(BLACK))
-				blackscore++;
-			else if(temp[i][j]==WHITE||temp[i][j]==AREA(WHITE))
-				whitescore++;
-				
-	frame->SetStatusText(wxString::Format("Area: %d-%d", blackscore, whitescore), 2);
+{	int i, j;
+	if(gnugoscore)
+	{	int whitescore = 0, blackscore = 0;
+		for(i=1; i<=boardsize; i++)
+			for(j=1; j<=boardsize; j++)
+				if(gnugoboard[i][j]==BLACK||(gnugoboard[i][j]==EMPTY&&board[i][j]==BLACK))
+					blackscore++;
+				else if(gnugoboard[i][j]==WHITE||(gnugoboard[i][j]==EMPTY&&board[i][j]==WHITE))
+					whitescore++;
+		whitescore += 6;
+		
+		frame->SetStatusText(wxString::Format("Area: %d-%d.5", blackscore, whitescore), 2);
+	}
+	else
+	{	char temp[21][21];
+		memcpy(temp, board, BOARDMEMORYLEN);
+		for(i=1; i<=boardsize; i++)
+			for(j=1; j<=boardsize; j++)
+				if(temp[i][j]==BLACK||temp[i][j]==WHITE)
+				{	SpreadArea(temp, i-1, j, temp[i][j]);
+					SpreadArea(temp, i, j-1, temp[i][j]);
+					SpreadArea(temp, i+1, j, temp[i][j]);
+					SpreadArea(temp, i, j+1, temp[i][j]);
+				}
+		
+		int whitescore = 0, blackscore = 0;
+		for(i=1; i<=boardsize; i++)
+			for(j=1; j<=boardsize; j++)
+				if(temp[i][j]==BLACK||temp[i][j]==AREA(BLACK))
+					blackscore++;
+				else if(temp[i][j]==WHITE||temp[i][j]==AREA(WHITE))
+					whitescore++;
+		
+		frame->SetStatusText(wxString::Format("Area: %d-%d", blackscore, whitescore), 2);
+	}
 }
 
 // Update turn and move info on status bar
@@ -134,37 +148,6 @@ bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y)
 	return !dupe;
 }
 
-// Make a move on cell (x, y) if legal, and update the current board info and history
-void SimpleGoPanel::MakeMove(int x, int y)
-{	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
-		return;
-	char temp[21][21];
-	memcpy(temp, board, BOARDMEMORYLEN);
-	
-	if(ValidMove(temp, x, y))
-	{	board[x][y] = curmove%2+1;
-		wxClientDC dc(this);
-		DrawStone(dc, x, y, curmove%2+1);
-		if(memcmp(temp, board, BOARDMEMORYLEN))
-		{	for(int i=0; i<21; i++)
-				for(int j=0; j<21; j++)
-					if(temp[i][j]!=board[i][j])
-						DrawStone(dc, i, j, temp[i][j]);
-			memcpy(board, temp, BOARDMEMORYLEN);
-		}
-		
-		curmove++;
-		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
-		memcpy(history[curmove], board, BOARDMEMORYLEN);
-		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
-		movelist[curmove-1].x = x;
-		movelist[curmove-1].y = y;
-		totmove = curmove;
-		UpdateStatus();
-		ScoreGame(board);
-	}
-}
-
 // Process paint event by redrawing the board
 void SimpleGoPanel::Paint(wxPaintEvent& WXUNUSED(event))
 {	wxPaintDC dc(this);
@@ -213,6 +196,16 @@ void SimpleGoPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
 		dc.DrawCircle(wxPoint(16*x,16*y), 6);
 	}
+	else if(colour==AREA(BLACK))
+	{	dc.SetPen(*wxBLACK_PEN);
+		dc.SetBrush(*wxBLACK_BRUSH);
+		dc.DrawCircle(wxPoint(16*x,16*y), 3);
+	}
+	else if(colour==AREA(WHITE))
+	{	dc.SetBrush(*wxWHITE_BRUSH);
+		dc.SetPen(*wxBLACK_PEN);
+		dc.DrawCircle(wxPoint(16*x,16*y), 3);
+	}
 }
 
 // Draw the given board using the provided device context
@@ -221,7 +214,10 @@ void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 	for(i=1; i<20; i++)
 		for(j=1; j<20; j++)
 		{	if(i<=boardsize&&j<=boardsize)
-				DrawStone(dc, i, j, board[i][j]);
+			{	DrawStone(dc, i, j, board[i][j]);
+				if(gnugoscore)
+					DrawStone(dc, i, j, AREA(gnugoboard[i][j]));
+			}
 			else
 			{	dc.SetBrush(*wxWHITE_BRUSH);
 				dc.SetPen(*wxWHITE_PEN);
@@ -253,8 +249,6 @@ void SimpleGoPanel::Idle(wxIdleEvent& event)
 		count++;
 		attempts[x][y] = 1;
 	}
-	if(curmove>=1 && memcmp(history[curmove], history[curmove-1], BOARDMEMORYLEN)==0)
-		frame->playmenu->Check(ID_RANDOM, false);
 
 	MakePass();
 	event.RequestMore();
@@ -272,15 +266,18 @@ void SimpleGoPanel::LMouseUp(wxMouseEvent& event)
 // left/right moves through history; 'p' passes the turn
 void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 {	if(event.GetKeyCode()==WXK_LEFT&&curmove>0)
-	{	curmove--;
+	{	gnugoscore = false;
+		curmove--;
 		UpdateBoard();
 	}
 	else if(event.GetKeyCode()==WXK_RIGHT&&curmove<totmove)
-	{	curmove++;
+	{	gnugoscore = false;
+		curmove++;
 		UpdateBoard();
 	}
-	else if(event.GetKeyCode()=='P')
+	else if(event.GetKeyCode()=='P'&&!event.AltDown())
 		MakePass();
+	event.Skip();
 }
 
 // Redraw the current board and update status bar info
@@ -294,7 +291,12 @@ void SimpleGoPanel::UpdateBoard()
 
 // Pass the current turn and update the status bar and history
 void SimpleGoPanel::MakePass()
-{	curmove++;
+{	if(gnugoscore)
+	{	gnugoscore = false;
+		wxClientDC dc(this);
+		DrawBoard(dc, board);
+	}
+	curmove++;
 	history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
 	memcpy(history[curmove], board, BOARDMEMORYLEN);
 	movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
@@ -302,11 +304,75 @@ void SimpleGoPanel::MakePass()
 	movelist[curmove-1].y = 0;
 	totmove = curmove;
 	UpdateStatus();
+	if(curmove>=2 && movelist[curmove-2].x==0 && movelist[curmove-2].y==0)
+	{	frame->playmenu->Check(ID_RANDOM, false);
+		frame->MakeGNUGoScore();
+	}
+	else if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
+		frame->MakeGNUGoMove();
+}
+
+// Make a move on cell (x, y) if legal, and update the current board info and history
+void SimpleGoPanel::MakeMove(int x, int y)
+{	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
+		return;
+	char temp[21][21];
+	memcpy(temp, board, BOARDMEMORYLEN);
+	
+	if(ValidMove(temp, x, y))
+	{	board[x][y] = curmove%2+1;
+		wxClientDC dc(this);
+		DrawStone(dc, x, y, curmove%2+1);
+		if(memcmp(temp, board, BOARDMEMORYLEN))
+		{	for(int i=0; i<21; i++)
+				for(int j=0; j<21; j++)
+					if(temp[i][j]!=board[i][j])
+						DrawStone(dc, i, j, temp[i][j]);
+			memcpy(board, temp, BOARDMEMORYLEN);
+		}
+		
+		if(gnugoscore)
+		{	gnugoscore = false;
+			DrawBoard(dc, board);
+		}
+		curmove++;
+		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
+		memcpy(history[curmove], board, BOARDMEMORYLEN);
+		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+		movelist[curmove-1].x = x;
+		movelist[curmove-1].y = y;
+		totmove = curmove;
+		UpdateStatus();
+		ScoreGame(board);
+		if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
+			frame->MakeGNUGoMove();
+	}
+}
+
+// Make a move on cell (x, y) if legal, and update the current board info and history,
+// but don't update the GUI
+void SimpleGoPanel::MakeMoveQuiet(int x, int y)
+{	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
+		return;
+	char temp[21][21];
+	memcpy(temp, board, BOARDMEMORYLEN);
+	
+	if(ValidMove(temp, x, y))
+	{	memcpy(board, temp, BOARDMEMORYLEN);
+		curmove++;
+		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
+		memcpy(history[curmove], board, BOARDMEMORYLEN);
+		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+		movelist[curmove-1].x = x;
+		movelist[curmove-1].y = y;
+		totmove = curmove;
+	}
 }
 
 // Initialize the current board and history variables
 void SimpleGoPanel::InitGame()
-{	curmove = 0;
+{	gnugoscore = false;
+	curmove = 0;
 	totmove = 0;
 	if(history!=NULL)
 		free(history);
