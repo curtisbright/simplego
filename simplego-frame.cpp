@@ -315,7 +315,7 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 	
 	if(SaveDialog.ShowModal()==wxID_OK)
 	{	wxTextFile file(SaveDialog.GetPath());
-		file.AddLine(wxString::Format("(;FF[4]GM[1]SZ[%d]", panel->boardsize));
+		file.AddLine(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]", panel->boardsize, VERSION));
 		if(panel->gnugoscore)
 		{	int score = -6;
 			int i, j;
@@ -343,6 +343,7 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 void SimpleGoFrame::About(wxCommandEvent& WXUNUSED(event))
 {	wxAboutDialogInfo info;
 	info.SetName("Simple Go");
+	info.SetVersion(VERSION);
 	info.SetDescription("A simple implementation of the game Go\nby Curtis Bright");
 	info.SetWebSite("http://www.curtisbright.com/simplego/");
 	wxAboutBox(info);

@@ -1,3 +1,7 @@
+#ifndef VERSION
+#define VERSION ""
+#endif
+
 // Menu id constants
 enum {
 	ID_NEW_GAME = wxID_HIGHEST+1,
