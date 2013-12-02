@@ -265,9 +265,7 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
 
 // Load game menu command
 void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
-{	char str[15];
-		
-	wxFileDialog LoadDialog(this, "Load Game", "", str, "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+{	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
 	{	wxTextFile file(LoadDialog.GetPath());
