@@ -92,6 +92,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 
 	sprintf(str, "boardsize %d\n", panel->boardsize);
 	write(in[1], str, strlen(str));
+	while(read(out[0], buf, 1) && buf[0] != '=');
 
 	for(int i=0; i<panel->curmove; i++)
 	{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
@@ -99,24 +100,20 @@ void SimpleGoFrame::MakeGNUGoMove()
 		else
 			sprintf(str, "play %s %c%d\n", i%2 ? "white" : "black", panel->movelist[i].x+'A'-1+(panel->movelist[i].x>8 ? 1 : 0), (panel->boardsize+1)-panel->movelist[i].y);
 		write(in[1], str, strlen(str));
+		while(read(out[0], buf, 1) && buf[0] != '=');
 	}
 
 	sprintf(str, "genmove %s\n", panel->curmove%2 ? "white" : "black");
 	write(in[1], str, strlen(str));
-	
+
 	close(in[1]);
 
-	int count = 0;
 	while(read(out[0], buf, 1))
-	{	//printf("%c", buf[0]);
 		if(buf[0] == '=')
-			count++;
-		if(count == panel->curmove+2)
 		{	while(n = read(out[0], buf, 255))
 			{	buf[n] = '\0';
 				strcat(data, buf);
 			}
-			//printf("%s", data);
 			if(data[1]>='A' && data[1]<='T' && data[2]>='1' && data[2]<='9')
 			{	int x = data[1]-'A'+1-(data[1]>'H' ? 1 : 0);
 				int y = (panel->boardsize+1)-atoi(data+2);
@@ -125,7 +122,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 			else
 				panel->MakePass();
 		}
-	}
+	
 	close(out[0]);
 	#endif
 }
@@ -160,6 +157,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 
 	sprintf(str, "boardsize %d\n", panel->boardsize);
 	write(in[1], str, strlen(str));
+	while(read(out[0], buf, 1) && buf[0] != '=');
 
 	for(int i=0; i<panel->curmove; i++)
 	{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
@@ -167,6 +165,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 		else
 			sprintf(str, "play %s %c%d\n", i%2 ? "white" : "black", panel->movelist[i].x+'A'-1+(panel->movelist[i].x>8 ? 1 : 0), (panel->boardsize+1)-panel->movelist[i].y);
 		write(in[1], str, strlen(str));
+		while(read(out[0], buf, 1) && buf[0] != '=');
 	}
 
 	sprintf(str, "final_status_list white_territory\n");
@@ -183,36 +182,31 @@ void SimpleGoFrame::MakeGNUGoScore()
 		for(j=0; j<21; j++)
 			panel->gnugoboard[i][j] = EMPTY;
 
+	while(n = read(out[0], buf, 255))
+	{	buf[n] = '\0';
+		strcat(data, buf);
+	}
+
 	int count = 0;
-	while(read(out[0], buf, 1))
-	{	if(buf[0] == '=')
+	for(i=0; i<(int)strlen(data)-1; i++)
+	{	if(data[i] == '=')
 			count++;
-		if(count == panel->curmove+2)
-		{	while(n = read(out[0], buf, 255))
-			{	buf[n] = '\0';
-				strcat(data, buf);
-			}
-			int i;
-			for(i=0; i<strlen(data)-1; i++)
-			{	if(data[i] == '=')
-					count++;
-				if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
-				{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
-					int y = (panel->boardsize+1)-atoi(data+i+1);
-					
-					if(count == panel->curmove+2)
-						panel->gnugoboard[x][y] = WHITE;
-					else if(count == panel->curmove+3)
-						panel->gnugoboard[x][y] = BLACK;
-					else if(count == panel->curmove+4)
-						panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
-				}
-			}
+		if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
+		{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
+			int y = (panel->boardsize+1)-atoi(data+i+1);
+			
+			if(count == 1)
+				panel->gnugoboard[x][y] = WHITE;
+			else if(count == 2)
+				panel->gnugoboard[x][y] = BLACK;
+			else if(count == 3)
+				panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
 		}
 	}
+	
 	close(out[0]);
 	
-	if(count == panel->curmove+4)
+	if(count == 3)
 	{	panel->gnugoscore = true;
 		panel->UpdateBoard();
 	}
