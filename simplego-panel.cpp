@@ -151,7 +151,7 @@ bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, bool checkdupes)
 }
 
 // Process paint event by redrawing the board
-void SimpleGoPanel::Paint(wxPaintEvent& WXUNUSED(event))
+void SimpleGoPanel::Paint(wxPaintEvent& event)
 {	wxPaintDC dc(this);
 	DrawBoard(dc, board);
 }

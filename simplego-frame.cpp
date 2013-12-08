@@ -214,13 +214,13 @@ void SimpleGoFrame::MakeGNUGoScore()
 }
 
 // New game menu command
-void SimpleGoFrame::NewGame(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::NewGame(wxCommandEvent& event)
 {	panel->InitGame();
 	panel->UpdateBoard();
 }
 
 // Board size... menu command
-void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::SetBoard(wxCommandEvent& event)
 {	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
 	if(num>=2&&num<=19)
 	{	panel->boardsize = num;
@@ -230,12 +230,12 @@ void SimpleGoFrame::SetBoard(wxCommandEvent& WXUNUSED(event))
 }
 
 // Pass menu command
-void SimpleGoFrame::Pass(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::Pass(wxCommandEvent& event)
 {	panel->MakePass();
 }
 
 // Go to move... menu command
-void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::GoToMove(wxCommandEvent& event)
 {	long num;
 	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num)
 	   && num>=0 && num<=panel->totmove)
@@ -246,18 +246,18 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& WXUNUSED(event))
 }
 
 // GNU Go move menu command
-void SimpleGoFrame::GNUGoMove(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::GNUGoMove(wxCommandEvent& event)
 {	MakeGNUGoMove();
 }
 
 // GNU Go plays White menu command
-void SimpleGoFrame::GNUGoWhite(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::GNUGoWhite(wxCommandEvent& event)
 {	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
 		MakeGNUGoMove();
 }
 
 // GNU Go level... command
-void SimpleGoFrame::GNUGoLevel(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::GNUGoLevel(wxCommandEvent& event)
 {	long num;
 	if(wxGetTextFromUser(wxString::Format("Enter the level for GNU Go to play at, between 1 and 10:"), "GNU Go level", "").ToLong(&num)
 	   && num>=1 && num<=10)
@@ -265,12 +265,12 @@ void SimpleGoFrame::GNUGoLevel(wxCommandEvent& WXUNUSED(event))
 }
 
 // Score game menu command
-void SimpleGoFrame::ScoreGame(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::ScoreGame(wxCommandEvent& event)
 {	MakeGNUGoScore();
 }
 
 // Load game... menu command
-void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 {	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
@@ -307,7 +307,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& WXUNUSED(event))
 }
 
 // Save game... menu command
-void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 {	char str[15];
 	time_t rawtime;
 	time(&rawtime);
@@ -344,7 +344,7 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& WXUNUSED(event))
 }
 
 // About... menu command
-void SimpleGoFrame::About(wxCommandEvent& WXUNUSED(event))
+void SimpleGoFrame::About(wxCommandEvent& event)
 {	wxAboutDialogInfo info;
 	info.SetName("Simple Go");
 	info.SetVersion(VERSION);
@@ -354,6 +354,6 @@ void SimpleGoFrame::About(wxCommandEvent& WXUNUSED(event))
 }
 
 // Menu highlight event
-void SimpleGoFrame::Nothing(wxMenuEvent& WXUNUSED(event))
+void SimpleGoFrame::Nothing(wxMenuEvent& event)
 {	// Don't clear the status bar
 }
