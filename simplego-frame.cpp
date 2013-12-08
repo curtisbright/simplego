@@ -282,6 +282,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 		bool sizeset = false;
 		for(int i=0; i<file.GetLineCount(); i++)
 		{	wxString line = file.GetLine(i);
+			line.Prepend(" ");
 			for(int j=0; j<line.Len(); j++)
 			{	wxString substr = line.Mid(j, 3);
 				if(substr.Cmp("SZ[")==0)
