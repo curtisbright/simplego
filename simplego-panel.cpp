@@ -46,7 +46,7 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 					whitescore++;
 		whitescore += 6;
 		
-		frame->SetStatusText(wxString::Format("Area: %d-%d.5", blackscore, whitescore), 2);
+		frame->SetStatusText(wxString::Format("%s%d-%d.5", boardsize>12 ? "S: " : "", blackscore, whitescore), 2);
 	}
 	else
 	{	char temp[21][21];
@@ -68,17 +68,14 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 				else if(temp[i][j]==WHITE||temp[i][j]==AREA(WHITE))
 					whitescore++;
 		
-		frame->SetStatusText(wxString::Format("Area: %d-%d", blackscore, whitescore), 2);
+		frame->SetStatusText(wxString::Format("%s%d-%d", boardsize>12 ? "S: " : "", blackscore, whitescore), 2);
 	}
 }
 
 // Update turn and move info on status bar
 void SimpleGoPanel::UpdateStatus()
-{	if(curmove%2==0)
-		frame->SetStatusText(wxT("Turn: Black"), 0);
-	else
-		frame->SetStatusText(wxT("Turn: White"), 0);
-	frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+{	frame->SetStatusText(wxString::Format("%s%s", boardsize>12 ? "T: " : "", curmove%2==0 ? "Black" : "White"), 0);
+	frame->SetStatusText(wxString::Format("%s%d", boardsize>12 ? "M: " : "", curmove), 1);
 }
 
 // Remove the group on the given board containing cell (x, y)
