@@ -25,7 +25,7 @@ private:
 	void RemoveGroup(char board[21][21], int x, int y);
 	bool HasLibertiesRec(char board[21][21], int x, int y);
 	bool HasLiberties(char board[21][21], int x, int y);
-	bool ValidMove(char board[21][21], int x, int y);
+	bool ValidMove(char board[21][21], int x, int y, bool checkdupes);
 	void Paint(wxPaintEvent& event);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc, char board[21][21]);
@@ -44,7 +44,7 @@ public:
 	void UpdateBoard();
 	void MakePass();
 	void MakeMove(int x, int y);
-	void MakeMoveQuiet(int x, int y);
+	void MakeMoveSGF(int x, int y);
 	void InitGame();
 	SimpleGoPanel(SimpleGoFrame* parent);
 };

@@ -119,7 +119,7 @@ bool SimpleGoPanel::HasLiberties(char board[21][21], int x, int y)
 }
 
 // Determine if a move at cell (x, y) is valid on the given board
-bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y)
+bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, bool checkdupes)
 {	if(board[x][y]!=EMPTY)
 		return false;
 		
@@ -141,9 +141,11 @@ bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y)
 		RemoveGroup(board, x, y);
 		
 	bool dupe = false;
-	for(int i=0; i<=curmove; i++)
-		if(memcmp(board, history[i], BOARDMEMORYLEN)==0)
-			dupe = true;
+	if(checkdupes)
+	{	for(int i=0; i<=curmove; i++)
+			if(memcmp(board, history[i], BOARDMEMORYLEN)==0)
+				dupe = true;
+	}
 	
 	return !dupe;
 }
@@ -241,7 +243,7 @@ void SimpleGoPanel::Idle(wxIdleEvent& event)
 			y = 1+rand()%boardsize;
 		}
 		memcpy(temp, board, BOARDMEMORYLEN);
-		if(ValidMove(temp, x, y))
+		if(ValidMove(temp, x, y, true))
 		{	MakeMove(x, y);
 			event.RequestMore();
 			return;
@@ -319,7 +321,7 @@ void SimpleGoPanel::MakeMove(int x, int y)
 	char temp[21][21];
 	memcpy(temp, board, BOARDMEMORYLEN);
 	
-	if(ValidMove(temp, x, y))
+	if(ValidMove(temp, x, y, true))
 	{	board[x][y] = curmove%2+1;
 		wxClientDC dc(this);
 		DrawStone(dc, x, y, curmove%2+1);
@@ -349,24 +351,34 @@ void SimpleGoPanel::MakeMove(int x, int y)
 	}
 }
 
-// Make a move on cell (x, y) if legal, and update the current board info and history,
-// but don't update the GUI
-void SimpleGoPanel::MakeMoveQuiet(int x, int y)
+// Make a move on cell (x, y) according to the SGF move execution rules,
+// and update the current board info and history (but not the GUI)
+void SimpleGoPanel::MakeMoveSGF(int x, int y)
 {	if(x<=0 || y<=0 || x>boardsize || y>boardsize)
 		return;
-	char temp[21][21];
-	memcpy(temp, board, BOARDMEMORYLEN);
 	
-	if(ValidMove(temp, x, y))
-	{	memcpy(board, temp, BOARDMEMORYLEN);
-		curmove++;
-		history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
-		memcpy(history[curmove], board, BOARDMEMORYLEN);
-		movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
-		movelist[curmove-1].x = x;
-		movelist[curmove-1].y = y;
-		totmove = curmove;
-	}
+	board[x][y] = curmove%2+1;
+	int colour = board[x][y];
+	int oppcolour = OPP(colour);
+
+	if(board[x-1][y]==oppcolour && !HasLiberties(board, x-1, y))
+		RemoveGroup(board, x-1, y);
+	if(board[x+1][y]==oppcolour && !HasLiberties(board, x+1, y))
+		RemoveGroup(board, x+1, y);
+	if(board[x][y+1]==oppcolour && !HasLiberties(board, x, y+1))
+		RemoveGroup(board, x, y+1);
+	if(board[x][y-1]==oppcolour && !HasLiberties(board, x, y-1))
+		RemoveGroup(board, x, y-1);
+	if(!HasLiberties(board, x, y))
+		RemoveGroup(board, x, y);
+	
+	curmove++;
+	history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
+	memcpy(history[curmove], board, BOARDMEMORYLEN);
+	movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+	movelist[curmove-1].x = x;
+	movelist[curmove-1].y = y;
+	totmove = curmove;
 }
 
 // Initialize the current board and history variables
