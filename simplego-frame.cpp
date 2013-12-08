@@ -38,7 +38,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	#endif
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
-	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SetBoard));
+	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GetBoard));
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
@@ -57,7 +57,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	int styles[3] = {wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN};
 	strcpy(gnugolevel, "10");
 	CreateStatusBar(3)->SetStatusStyles(3, styles);
-	SetClientSize(320, 320);
+	SetClientSize(16*(panel->boardsize+1), 16*(panel->boardsize+1));
 	panel->InitGame();
 	panel->UpdateBoard();
 }
@@ -220,11 +220,12 @@ void SimpleGoFrame::NewGame(wxCommandEvent& event)
 }
 
 // Board size... menu command
-void SimpleGoFrame::SetBoard(wxCommandEvent& event)
+void SimpleGoFrame::GetBoard(wxCommandEvent& event)
 {	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
 	if(num>=2&&num<=19)
 	{	panel->boardsize = num;
 		panel->InitGame();
+		SetSize(num);
 		panel->UpdateBoard();
 	}
 }
@@ -278,6 +279,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 		file.Open();
 		bool prevgnugoplay = gamemenu->IsChecked(ID_GNUGO_WHITE);
 		gamemenu->Check(ID_GNUGO_WHITE, false);
+		bool sizeset = false;
 		for(int i=0; i<file.GetLineCount(); i++)
 		{	wxString line = file.GetLine(i);
 			for(int j=0; j<line.Len(); j++)
@@ -285,12 +287,18 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 				if(substr.Cmp("SZ[")==0)
 				{	long num;
 					line.Mid(j+3, 2).ToLong(&num);
-					panel->boardsize = num;
-					panel->InitGame();
-					panel->UpdateBoard();
+					if(num>=2&&num<=19)
+					{	panel->boardsize = num;
+						panel->InitGame();
+					}
+					sizeset = true;
 				}
 				else if((substr.Find("B[")==1 || substr.Find("W[")==1) && !(substr.GetChar(0)>='A' && substr.GetChar(0)<='Z'))
-				{	if(line.Mid(j+2, 2).Cmp("[]")==0)
+				{	if(!sizeset)
+					{	panel->boardsize = 19;
+						panel->InitGame();
+					}
+					if(line.Mid(j+2, 2).Cmp("[]")==0)
 						panel->MakePass();
 					else if(line.Mid(j+3, 1).Cmp("a")>=0 && line.Mid(j+3, 1).Cmp("s")<=0 && line.Mid(j+4, 1).Cmp("a")>=0 && line.Mid(j+4, 1).Cmp("s")<=0)
 					{	int x = line.Mid(j+3, 1).GetChar(0) - 'a' + 1;
@@ -302,6 +310,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 		}
 		file.Close();
 		gamemenu->Check(ID_GNUGO_WHITE, prevgnugoplay);
+		SetSize(panel->boardsize);
 		panel->UpdateBoard();
 	}
 }
@@ -356,4 +365,12 @@ void SimpleGoFrame::About(wxCommandEvent& event)
 // Menu highlight event
 void SimpleGoFrame::Nothing(wxMenuEvent& event)
 {	// Don't clear the status bar
+}
+
+// Set the window size
+void SimpleGoFrame::SetSize(int boardsize)
+{	if(boardsize>9)
+		SetClientSize(16*(boardsize+1), 16*(boardsize+1));
+	else
+		SetClientSize(160, 160);
 }

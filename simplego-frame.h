@@ -25,7 +25,7 @@ class SimpleGoFrame : public wxFrame
 {	
 private:
 	void NewGame(wxCommandEvent& event);
-	void SetBoard(wxCommandEvent& event);
+	void GetBoard(wxCommandEvent& event);
 	void Pass(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
 	void GNUGoMove(wxCommandEvent& event);
@@ -36,6 +36,7 @@ private:
 	void SaveGame(wxCommandEvent& event);
 	void About(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);
+	void SetSize(int boardsize);
 	char gnugolevel[3];
 
 public:

@@ -213,9 +213,9 @@ void SimpleGoPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 // Draw the given board using the provided device context
 void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 {	int i, j;
-	for(i=1; i<20; i++)
-		for(j=1; j<20; j++)
-		{	if(i<=boardsize&&j<=boardsize)
+	for(i=0; i<21; i++)
+		for(j=0; j<21; j++)
+		{	if(i>=1&&j>=1&&i<=boardsize&&j<=boardsize)
 			{	DrawStone(dc, i, j, board[i][j]);
 				if(gnugoscore)
 					DrawStone(dc, i, j, AREA(gnugoboard[i][j]));
