@@ -245,7 +245,9 @@ void SimpleGoPanel::Idle(wxIdleEvent& event)
 		memcpy(temp, board, BOARDMEMORYLEN);
 		if(ValidMove(temp, x, y, true))
 		{	MakeMove(x, y);
+			#ifdef __WXMSW__
 			event.RequestMore();
+			#endif
 			return;
 		}
 		count++;
@@ -253,7 +255,9 @@ void SimpleGoPanel::Idle(wxIdleEvent& event)
 	}
 
 	MakePass();
+	#ifdef __WXMSW__
 	event.RequestMore();
+	#endif
 }
 
 // Process a left mouse click by making a move attempt at the appropriate cell
