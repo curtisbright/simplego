@@ -260,7 +260,7 @@ void SimpleGoFrame::GNUGoWhite(wxCommandEvent& event)
 // GNU Go level... command
 void SimpleGoFrame::GNUGoLevel(wxCommandEvent& event)
 {	long num;
-	if(wxGetTextFromUser(wxString::Format("Enter the level for GNU Go to play at, between 1 and 10:"), "GNU Go level", "").ToLong(&num)
+	if(wxGetTextFromUser(wxString::Format("Enter the level for GNU Go to play at, between 1 and 10:"), "GNU Go level", gnugolevel).ToLong(&num)
 	   && num>=1 && num<=10)
 		sprintf(gnugolevel, "%d", (int)num);
 }
