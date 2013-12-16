@@ -56,7 +56,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	
 	int styles[3] = {wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN};
 	strcpy(gnugolevel, "10");
-	CreateStatusBar(3)->SetStatusStyles(3, styles);
+	CreateStatusBar(3, wxSTB_SHOW_TIPS)->SetStatusStyles(3, styles);
 	SetClientSize(16*(panel->boardsize+1), 16*(panel->boardsize+1));
 	panel->InitGame();
 	panel->UpdateBoard();
