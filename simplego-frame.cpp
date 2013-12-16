@@ -159,14 +159,13 @@ void SimpleGoFrame::MakeGNUGoScore()
 	write(in[1], str, strlen(str));
 	while(read(out[0], buf, 1) && buf[0] != '=');
 
-	for(int i=0; i<panel->curmove; i++)
-	{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
-			sprintf(str, "play %s pass\n", i%2 ? "white" : "black");
-		else
-			sprintf(str, "play %s %c%d\n", i%2 ? "white" : "black", panel->movelist[i].x+'A'-1+(panel->movelist[i].x>8 ? 1 : 0), (panel->boardsize+1)-panel->movelist[i].y);
-		write(in[1], str, strlen(str));
-		while(read(out[0], buf, 1) && buf[0] != '=');
-	}
+	for(int i=1; i<=panel->boardsize; i++)
+		for(int j=1; j<=panel->boardsize; j++)
+			if(panel->board[i][j]!=EMPTY)
+			{	sprintf(str, "play %s %c%d\n", panel->board[i][j]==WHITE ? "white" : "black", i+'A'-1+(i>8 ? 1 : 0), (panel->boardsize+1)-j);
+				write(in[1], str, strlen(str));
+				while(read(out[0], buf, 1) && buf[0] != '=');
+			}
 
 	sprintf(str, "final_status_list white_territory\n");
 	write(in[1], str, strlen(str));
