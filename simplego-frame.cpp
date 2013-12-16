@@ -273,8 +273,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 {	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
-	{	wxFile file;
-		file.Open(LoadDialog.GetPath());
+	{	wxFile file(LoadDialog.GetPath());
 		bool prevgnugoplay = gamemenu->IsChecked(ID_GNUGO_WHITE);
 		gamemenu->Check(ID_GNUGO_WHITE, false);
 		bool sizeset = false;
@@ -329,8 +328,8 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 	wxFileDialog SaveDialog(this, "Save Game", "", str, "*.sgf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	
 	if(SaveDialog.ShowModal()==wxID_OK)
-	{	wxTextFile file(SaveDialog.GetPath());
-		file.AddLine(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]", panel->boardsize, VERSION));
+	{	wxFile file(SaveDialog.GetPath(), wxFile::write);
+		file.Write(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]", panel->boardsize, VERSION));
 		if(panel->gnugoscore)
 		{	int score = -6;
 			for(int i=1; i<=panel->boardsize; i++)
@@ -339,16 +338,15 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 						score++;
 					else if(panel->gnugoboard[i][j]==WHITE||(panel->gnugoboard[i][j]==EMPTY&&panel->board[i][j]==WHITE))
 						score--;
-			file.AddLine(wxString::Format("KM[6.5]RE[%c+%d.5]", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
+			file.Write(wxString::Format("KM[6.5]RE[%c+%d.5]", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
 		}
 		for(int i=0; i<panel->totmove; i++)
 		{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
-				file.AddLine(wxString::Format(";%c[]", i%2 ? 'W' : 'B'));
+				file.Write(wxString::Format(";%c[]", i%2 ? 'W' : 'B'));
 			else
-				file.AddLine(wxString::Format(";%c[%c%c]", i%2 ? 'W' : 'B', panel->movelist[i].x+'a'-1, panel->movelist[i].y+'a'-1));
+				file.Write(wxString::Format(";%c[%c%c]", i%2 ? 'W' : 'B', panel->movelist[i].x+'a'-1, panel->movelist[i].y+'a'-1));
 		}
-		file.AddLine(")");
-		file.Write();
+		file.Write(")");
 		file.Close();
 	}
 }
