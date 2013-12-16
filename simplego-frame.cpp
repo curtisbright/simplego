@@ -176,9 +176,8 @@ void SimpleGoFrame::MakeGNUGoScore()
 	
 	close(in[1]);
 
-	int i, j;
-	for(i=0; i<21; i++)
-		for(j=0; j<21; j++)
+	for(int i=0; i<21; i++)
+		for(int j=0; j<21; j++)
 			panel->gnugoboard[i][j] = EMPTY;
 
 	while(n = read(out[0], buf, 255))
@@ -187,7 +186,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 	}
 
 	int count = 0;
-	for(i=0; i<(int)strlen(data)-1; i++)
+	for(int i=0; i<(int)strlen(data)-1; i++)
 	{	if(data[i] == '=')
 			count++;
 		if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
@@ -274,37 +273,40 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 {	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
-	{	wxTextFile file(LoadDialog.GetPath());
-		file.Open();
+	{	wxFile file;
+		file.Open(LoadDialog.GetPath());
 		bool prevgnugoplay = gamemenu->IsChecked(ID_GNUGO_WHITE);
 		gamemenu->Check(ID_GNUGO_WHITE, false);
 		bool sizeset = false;
-		for(int i=0; i<file.GetLineCount(); i++)
-		{	wxString line = file.GetLine(i);
-			line.Prepend(" ");
-			for(int j=0; j<line.Len(); j++)
-			{	wxString substr = line.Mid(j, 3);
-				if(substr.Cmp("SZ[")==0)
-				{	long num;
-					line.Mid(j+3, 2).ToLong(&num);
-					if(num>=2&&num<=19)
-					{	panel->boardsize = num;
-						panel->InitGame();
-					}
-					sizeset = true;
+		wxString str;
+		file.ReadAll(&str);
+		int j=0;
+		for(int i=0; i<str.Len(); i++)
+			if(strchr(" \t\r\n\v\f", str.GetChar(i))==NULL)
+				str.SetChar(j++, str.GetChar(i));
+		str.Remove(j);
+		for(int i=0; i<str.Len(); i++)
+		{	wxString substr = str.Mid(i, 3);
+			if(substr.Cmp("SZ[")==0)
+			{	long num;
+				str.Mid(i+3, 2).ToLong(&num);
+				if(num>=2&&num<=19)
+				{	panel->boardsize = num;
+					panel->InitGame();
 				}
-				else if((substr.Find("B[")==1 || substr.Find("W[")==1) && !(substr.GetChar(0)>='A' && substr.GetChar(0)<='Z'))
-				{	if(!sizeset)
-					{	panel->boardsize = 19;
-						panel->InitGame();
-					}
-					if(line.Mid(j+2, 2).Cmp("[]")==0)
-						panel->MakePass();
-					else if(line.Mid(j+3, 1).Cmp("a")>=0 && line.Mid(j+3, 1).Cmp("s")<=0 && line.Mid(j+4, 1).Cmp("a")>=0 && line.Mid(j+4, 1).Cmp("s")<=0)
-					{	int x = line.Mid(j+3, 1).GetChar(0) - 'a' + 1;
-						int y = line.Mid(j+4, 1).GetChar(0) - 'a' + 1;
-						panel->MakeMoveSGF(x, y);
-					}
+				sizeset = true;
+			}
+			else if((substr.Find("B[")==1 || substr.Find("W[")==1) && !(substr.GetChar(0)>='A' && substr.GetChar(0)<='Z'))
+			{	if(!sizeset)
+				{	panel->boardsize = 19;
+					panel->InitGame();
+				}
+				if(str.Mid(i+2, 2).Cmp("[]")==0)
+					panel->MakePass();
+				else if(str.Mid(i+3, 1).Cmp("a")>=0 && str.Mid(i+3, 1).Cmp("s")<=0 && str.Mid(i+4, 1).Cmp("a")>=0 && str.Mid(i+4, 1).Cmp("s")<=0)
+				{	int x = str.Mid(i+3, 1).GetChar(0) - 'a' + 1;
+					int y = str.Mid(i+4, 1).GetChar(0) - 'a' + 1;
+					panel->MakeMoveSGF(x, y);
 				}
 			}
 		}
@@ -331,9 +333,8 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 		file.AddLine(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]", panel->boardsize, VERSION));
 		if(panel->gnugoscore)
 		{	int score = -6;
-			int i, j;
-			for(i=1; i<=panel->boardsize; i++)
-				for(j=1; j<=panel->boardsize; j++)
+			for(int i=1; i<=panel->boardsize; i++)
+				for(int j=1; j<=panel->boardsize; j++)
 					if(panel->gnugoboard[i][j]==BLACK||(panel->gnugoboard[i][j]==EMPTY&&panel->board[i][j]==BLACK))
 						score++;
 					else if(panel->gnugoboard[i][j]==WHITE||(panel->gnugoboard[i][j]==EMPTY&&panel->board[i][j]==WHITE))
