@@ -35,24 +35,22 @@ void SimpleGoPanel::SpreadArea(char board[21][21], int x, int y, int colour)
 
 // Calculate the score of the given board and update the status bar
 void SimpleGoPanel::ScoreGame(char board[21][21])
-{	int i, j;
-	if(gnugoscore)
-	{	int whitescore = 0, blackscore = 0;
-		for(i=1; i<=boardsize; i++)
-			for(j=1; j<=boardsize; j++)
+{	if(gnugoscore)
+	{	int score = -6;
+		for(int i=1; i<=boardsize; i++)
+			for(int j=1; j<=boardsize; j++)
 				if(gnugoboard[i][j]==BLACK||(gnugoboard[i][j]==EMPTY&&board[i][j]==BLACK))
-					blackscore++;
+					score++;
 				else if(gnugoboard[i][j]==WHITE||(gnugoboard[i][j]==EMPTY&&board[i][j]==WHITE))
-					whitescore++;
-		whitescore += 6;
+					score--;
 		
-		frame->SetStatusText(wxString::Format("%s%d-%d.5", boardsize>12 ? "S: " : "", blackscore, whitescore), 2);
+		frame->SetStatusText(wxString::Format("%s%c+%d.5", boardsize>12 ? "S: " : "", score>0 ? 'B' : 'W', score>0 ? score-1 : -score), 2);
 	}
 	else
 	{	char temp[21][21];
 		memcpy(temp, board, BOARDMEMORYLEN);
-		for(i=1; i<=boardsize; i++)
-			for(j=1; j<=boardsize; j++)
+		for(int i=1; i<=boardsize; i++)
+			for(int j=1; j<=boardsize; j++)
 				if(temp[i][j]==BLACK||temp[i][j]==WHITE)
 				{	SpreadArea(temp, i-1, j, temp[i][j]);
 					SpreadArea(temp, i, j-1, temp[i][j]);
@@ -61,8 +59,8 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 				}
 		
 		int whitescore = 0, blackscore = 0;
-		for(i=1; i<=boardsize; i++)
-			for(j=1; j<=boardsize; j++)
+		for(int i=1; i<=boardsize; i++)
+			for(int j=1; j<=boardsize; j++)
 				if(temp[i][j]==BLACK||temp[i][j]==AREA(BLACK))
 					blackscore++;
 				else if(temp[i][j]==WHITE||temp[i][j]==AREA(WHITE))
@@ -209,9 +207,8 @@ void SimpleGoPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 
 // Draw the given board using the provided device context
 void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
-{	int i, j;
-	for(i=0; i<21; i++)
-		for(j=0; j<21; j++)
+{	for(int i=0; i<21; i++)
+		for(int j=0; j<21; j++)
 		{	if(i>=1&&j>=1&&i<=boardsize&&j<=boardsize)
 			{	DrawStone(dc, i, j, board[i][j]);
 				if(gnugoscore)
@@ -393,11 +390,10 @@ void SimpleGoPanel::InitGame()
 		free(movelist);
 	history = (char(*)[21][21])malloc(BOARDMEMORYLEN);
 	movelist = (pos*)malloc(0);
-	int i, j;
-	for(i=0; i<21; i++)
-		for(j=0; j<21; j++)
+	for(int i=0; i<21; i++)
+		for(int j=0; j<21; j++)
 			board[i][j] = EMPTY;
-	for(i=0; i<21; i++)
+	for(int i=0; i<21; i++)
 		{	board[i][0] = BORDER;
 			board[i][boardsize+1] = BORDER;
 			board[0][i] = BORDER;
