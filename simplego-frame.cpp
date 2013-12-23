@@ -84,7 +84,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		limit.rlim_cur = 3;
 		setrlimit(RLIMIT_CPU, &limit);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
-		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", gnugolevel, NULL);
+		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", gnugolevel, "--never-resign", "--komi", "6.5", NULL);
 	}
 	
 	close(in[0]);
@@ -149,7 +149,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 		limit.rlim_cur = 3;
 		setrlimit(RLIMIT_CPU, &limit);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
-		execl("/usr/games/gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, NULL);
+		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", str, NULL);
 	}
 	
 	close(in[0]);
