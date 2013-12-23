@@ -235,9 +235,8 @@ void SimpleGoFrame::Pass(wxCommandEvent& event)
 
 // Go to move... menu command
 void SimpleGoFrame::GoToMove(wxCommandEvent& event)
-{	long num;
-	if(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "").ToLong(&num)
-	   && num>=0 && num<=panel->totmove)
+{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", ""));
+	if(num>=0 && num<=panel->totmove)
 	{	panel->gnugoscore = false;
 		panel->curmove = num;
 		panel->UpdateBoard();
@@ -257,10 +256,9 @@ void SimpleGoFrame::GNUGoWhite(wxCommandEvent& event)
 
 // GNU Go level... command
 void SimpleGoFrame::GNUGoLevel(wxCommandEvent& event)
-{	long num;
-	if(wxGetTextFromUser(wxString::Format("Enter the level for GNU Go to play at, between 1 and 10:"), "GNU Go level", gnugolevel).ToLong(&num)
-	   && num>=1 && num<=10)
-		sprintf(gnugolevel, "%d", (int)num);
+{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the level for GNU Go to play at, between 1 and 10:"), "GNU Go level", gnugolevel));
+	if(num>=1 && num<=10)
+		sprintf(gnugolevel, "%d", num);
 }
 
 // Score game menu command
@@ -287,8 +285,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 		for(int i=0; i<str.Len(); i++)
 		{	wxString substr = str.Mid(i, 3);
 			if(substr.Cmp("SZ[")==0)
-			{	long num;
-				str.Mid(i+3, 2).ToLong(&num);
+			{	int num = wxAtoi(str.Mid(i+3, 2));
 				if(num>=2&&num<=19)
 				{	panel->boardsize = num;
 					panel->InitGame();
