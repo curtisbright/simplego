@@ -41,6 +41,7 @@ public:
 	char board[21][21];			// Current board position
 	char gnugoboard[21][21];	// GNU Go board report
 	bool gnugoscore;
+	void ScoreArea(char board[21][21]);
 	void UpdateBoard();
 	void MakePass();
 	void MakeMove(int x, int y);

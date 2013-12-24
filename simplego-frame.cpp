@@ -167,47 +167,32 @@ void SimpleGoFrame::MakeGNUGoScore()
 				while(read(out[0], buf, 1) && buf[0] != '=');
 			}
 
-	sprintf(str, "final_status_list white_territory\n");
-	write(in[1], str, strlen(str));
-	sprintf(str, "final_status_list black_territory\n");
-	write(in[1], str, strlen(str));
 	sprintf(str, "final_status_list dead\n");
 	write(in[1], str, strlen(str));
 	
 	close(in[1]);
 
-	for(int i=0; i<21; i++)
-		for(int j=0; j<21; j++)
-			panel->gnugoboard[i][j] = EMPTY;
+	memcpy(panel->gnugoboard, panel->board, BOARDMEMORYLEN);
 
-	while(n = read(out[0], buf, 255))
-	{	buf[n] = '\0';
-		strcat(data, buf);
-	}
-
-	int count = 0;
-	for(int i=0; i<(int)strlen(data)-1; i++)
-	{	if(data[i] == '=')
-			count++;
-		if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
-		{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
-			int y = (panel->boardsize+1)-atoi(data+i+1);
-			
-			if(count == 1)
-				panel->gnugoboard[x][y] = WHITE;
-			else if(count == 2)
-				panel->gnugoboard[x][y] = BLACK;
-			else if(count == 3)
-				panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
+	while(read(out[0], buf, 1))
+		if(buf[0] == '=')
+		{	while(n = read(out[0], buf, 255))
+			{	buf[n] = '\0';
+				strcat(data, buf);
+			}
+			for(int i=0; i<(int)strlen(data)-1; i++)
+				if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
+				{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
+					int y = (panel->boardsize+1)-atoi(data+i+1);
+					panel->gnugoboard[x][y] = AREA(OPP(panel->board[x][y]));
+				}
 		}
-	}
 	
 	close(out[0]);
 	
-	if(count == 3)
-	{	panel->gnugoscore = true;
-		panel->UpdateBoard();
-	}
+	panel->ScoreArea(panel->gnugoboard);
+	panel->gnugoscore = true;
+	panel->UpdateBoard();
 	#endif
 }
 

@@ -39,9 +39,9 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 	{	int score = -6;
 		for(int i=1; i<=boardsize; i++)
 			for(int j=1; j<=boardsize; j++)
-				if(gnugoboard[i][j]==BLACK||(gnugoboard[i][j]==EMPTY&&board[i][j]==BLACK))
+				if(gnugoboard[i][j]==BLACK||gnugoboard[i][j]==AREA(BLACK))
 					score++;
-				else if(gnugoboard[i][j]==WHITE||(gnugoboard[i][j]==EMPTY&&board[i][j]==WHITE))
+				else if(gnugoboard[i][j]==WHITE||gnugoboard[i][j]==AREA(WHITE))
 					score--;
 		
 		frame->SetStatusText(wxString::Format("%s%c+%d.5", boardsize>12 ? "S: " : "", score>0 ? 'B' : 'W', score>0 ? score-1 : -score), 2);
@@ -49,14 +49,7 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 	else
 	{	char temp[21][21];
 		memcpy(temp, board, BOARDMEMORYLEN);
-		for(int i=1; i<=boardsize; i++)
-			for(int j=1; j<=boardsize; j++)
-				if(temp[i][j]==BLACK||temp[i][j]==WHITE)
-				{	SpreadArea(temp, i-1, j, temp[i][j]);
-					SpreadArea(temp, i, j-1, temp[i][j]);
-					SpreadArea(temp, i+1, j, temp[i][j]);
-					SpreadArea(temp, i, j+1, temp[i][j]);
-				}
+		ScoreArea(temp);
 		
 		int whitescore = 0, blackscore = 0;
 		for(int i=1; i<=boardsize; i++)
@@ -211,8 +204,8 @@ void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 		for(int j=0; j<21; j++)
 		{	if(i>=1&&j>=1&&i<=boardsize&&j<=boardsize)
 			{	DrawStone(dc, i, j, board[i][j]);
-				if(gnugoscore)
-					DrawStone(dc, i, j, AREA(gnugoboard[i][j]));
+				if(gnugoscore && board[i][j]!=gnugoboard[i][j])
+					DrawStone(dc, i, j, gnugoboard[i][j]);
 			}
 			else
 			{	dc.SetBrush(*wxWHITE_BRUSH);
@@ -278,6 +271,18 @@ void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 	else if(event.GetKeyCode()=='P'&&!event.AltDown())
 		MakePass();
 	event.Skip();
+}
+
+// Fill the empty cells on the given board with their 'area' type so the board can be scored
+void SimpleGoPanel::ScoreArea(char board[21][21])
+{	for(int i=1; i<=boardsize; i++)
+		for(int j=1; j<=boardsize; j++)
+			if(board[i][j]==BLACK||board[i][j]==WHITE)
+			{	SpreadArea(board, i-1, j, board[i][j]);
+				SpreadArea(board, i, j-1, board[i][j]);
+				SpreadArea(board, i+1, j, board[i][j]);
+				SpreadArea(board, i, j+1, board[i][j]);
+			}
 }
 
 // Redraw the current board and update status bar info
