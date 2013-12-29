@@ -184,7 +184,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 				if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
 				{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
 					int y = (panel->boardsize+1)-atoi(data+i+1);
-					panel->gnugoboard[x][y] = AREA(OPP(panel->board[x][y]));
+					panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
 				}
 		}
 	
@@ -316,9 +316,9 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 		{	int score = -6;
 			for(int i=1; i<=panel->boardsize; i++)
 				for(int j=1; j<=panel->boardsize; j++)
-					if(panel->gnugoboard[i][j]==BLACK||(panel->gnugoboard[i][j]==EMPTY&&panel->board[i][j]==BLACK))
+					if(panel->gnugoboard[i][j]==BLACK)
 						score++;
-					else if(panel->gnugoboard[i][j]==WHITE||(panel->gnugoboard[i][j]==EMPTY&&panel->board[i][j]==WHITE))
+					else if(panel->gnugoboard[i][j]==WHITE)
 						score--;
 			file.Write(wxString::Format("KM[6.5]RE[%c+%d.5]", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
 		}

@@ -39,9 +39,9 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 	{	int score = -6;
 		for(int i=1; i<=boardsize; i++)
 			for(int j=1; j<=boardsize; j++)
-				if(gnugoboard[i][j]==BLACK||gnugoboard[i][j]==AREA(BLACK))
+				if(gnugoboard[i][j]==BLACK)
 					score++;
-				else if(gnugoboard[i][j]==WHITE||gnugoboard[i][j]==AREA(WHITE))
+				else if(gnugoboard[i][j]==WHITE)
 					score--;
 		
 		frame->SetStatusText(wxString::Format("%s%c+%d.5", boardsize>12 ? "S: " : "", score>0 ? 'B' : 'W', score>0 ? score-1 : -score), 2);
@@ -54,9 +54,9 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 		int whitescore = 0, blackscore = 0;
 		for(int i=1; i<=boardsize; i++)
 			for(int j=1; j<=boardsize; j++)
-				if(temp[i][j]==BLACK||temp[i][j]==AREA(BLACK))
+				if(temp[i][j]==BLACK)
 					blackscore++;
-				else if(temp[i][j]==WHITE||temp[i][j]==AREA(WHITE))
+				else if(temp[i][j]==WHITE)
 					whitescore++;
 		
 		frame->SetStatusText(wxString::Format("%s%d-%d", boardsize>12 ? "S: " : "", blackscore, whitescore), 2);
@@ -205,7 +205,7 @@ void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 		{	if(i>=1&&j>=1&&i<=boardsize&&j<=boardsize)
 			{	DrawStone(dc, i, j, board[i][j]);
 				if(gnugoscore && board[i][j]!=gnugoboard[i][j])
-					DrawStone(dc, i, j, gnugoboard[i][j]);
+					DrawStone(dc, i, j, AREA(gnugoboard[i][j]));
 			}
 			else
 			{	dc.SetBrush(*wxWHITE_BRUSH);
@@ -273,7 +273,7 @@ void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
-// Fill the empty cells on the given board with their 'area' type so the board can be scored
+// Fill empty cells on the given board with the colour who owns that area
 void SimpleGoPanel::ScoreArea(char board[21][21])
 {	for(int i=1; i<=boardsize; i++)
 		for(int j=1; j<=boardsize; j++)
@@ -283,6 +283,12 @@ void SimpleGoPanel::ScoreArea(char board[21][21])
 				SpreadArea(board, i+1, j, board[i][j]);
 				SpreadArea(board, i, j+1, board[i][j]);
 			}
+	for(int i=1; i<=boardsize; i++)
+		for(int j=1; j<=boardsize; j++)
+			if(board[i][j]==AREA(BLACK))
+				board[i][j] = BLACK;
+			else if(board[i][j]==AREA(WHITE))
+				board[i][j] = WHITE;
 }
 
 // Redraw the current board and update status bar info
