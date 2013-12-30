@@ -118,13 +118,15 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 	time(&rawtime);
 	strftime(str, 21, "pente-%y%m%d-1.sgf", localtime(&rawtime));
 	for(int i=2; wxFileExists(str); i++)
-		sprintf(str+6, "-%d.sgf", i);
+		sprintf(str+12, "-%d.sgf", i);
 	
 	wxFileDialog SaveDialog(this, "Save Game", "", str, "*.sgf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	
 	if(SaveDialog.ShowModal()==wxID_OK)
 	{	wxFile file(SaveDialog.GetPath(), wxFile::write);
 		file.Write(wxString::Format("(;FF[4]GM[41]SZ[%d]AP[Simple Pente:%s]", panel->boardsize, VERSION));
+		if(panel->finishedgame)
+			file.Write(wxString::Format("RE[%c+]", panel->totmove%2 ? 'B' : 'W'));
 		for(int i=0; i<panel->totmove; i++)
 		{	file.Write(wxString::Format(";%c[%c%c]", i%2 ? 'W' : 'B', panel->movelist[i].x+'a'-1, panel->movelist[i].y+'a'-1));
 		}

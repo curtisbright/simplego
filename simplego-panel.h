@@ -24,11 +24,14 @@ private:
 	void Idle(wxIdleEvent& event);
 	void LMouseUp(wxMouseEvent& event);
 	void KeyDown(wxKeyEvent& event);
+	bool HasNInARow(char board[21][21], int n, int x, int y, int xd, int yd, int colour);
+	bool HasPente(char board[21][21]);
 	int (*capturehist)[2];
 	
 public:
 	int curmove;				// Current move number
 	int totmove;				// Total number of moves
+	bool finishedgame;
 	int boardsize;				// Size of board
 	pos* movelist;				// All previous moves
 	char board[21][21];			// Current board position

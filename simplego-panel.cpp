@@ -17,14 +17,17 @@ SimpleGoPanel::SimpleGoPanel(SimpleGoFrame* parent) : wxPanel(parent)
 
 // Update turn and move info on status bar
 void SimpleGoPanel::UpdateStatus()
-{	frame->SetStatusText(wxString::Format("%s%s", boardsize>12 ? "T: " : "", curmove%2==0 ? "Black" : "White"), 0);
-	frame->SetStatusText(wxString::Format("%s%d", boardsize>12 ? "M: " : "", curmove), 1);
-	frame->SetStatusText(wxString::Format("%s%d-%d", boardsize>12 ? "C: " : "", capturehist[curmove][0], capturehist[curmove][1]), 2);
+{	if(capturehist[curmove][0]>=5 || capturehist[curmove][1]>=5 || HasPente(board))
+		frame->SetStatusText(wxString::Format("Winner: %s", curmove%2==1 ? "Black" : "White"), 0);
+	else
+		frame->SetStatusText(wxString::Format("Turn: %s", curmove%2==0 ? "Black" : "White"), 0);
+	frame->SetStatusText(wxString::Format("Move: %d", curmove), 1);
+	frame->SetStatusText(wxString::Format("Captures: %d-%d", capturehist[curmove][0], capturehist[curmove][1]), 2);
 }
 
 // Determine if a move at cell (x, y) is valid on the given board
 bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, int& captures)
-{	if(board[x][y]!=EMPTY)
+{	if(board[x][y]!=EMPTY || capturehist[curmove][0]>=5 || capturehist[curmove][1]>=5 || HasPente(board))
 		return false;
 		
 	board[x][y] = curmove%2+1;
@@ -163,6 +166,26 @@ void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
+// Check if the given board contains n in a row with given position, direction, and colour
+bool SimpleGoPanel::HasNInARow(char board[21][21], int n, int x, int y, int xd, int yd, int colour)
+{	if(!(x>=1 && y>=1 && x<=boardsize && y<=boardsize) || board[x][y]!=colour)
+		return false;
+	if(n==1)
+		return true;
+	return HasNInARow(board, n-1, x+xd, y+yd, xd, yd, colour);
+}
+
+// Check if the given board contains a Pente (five in a row of same colour)
+bool SimpleGoPanel::HasPente(char board[21][21])
+{	for(int i=1; i<=boardsize; i++)
+		for(int j=1; j<=boardsize; j++)
+			for(int xd=-1; xd<=1; xd++)
+				for(int yd=-1; yd<=1; yd++)
+					if((xd!=0||yd!=0) && board[i][j]!=EMPTY && HasNInARow(board, 5, i, j, xd, yd, board[i][j]))
+						return true;
+	return false;
+}
+
 // Redraw the current board and update status bar info
 void SimpleGoPanel::UpdateBoard()
 {	memcpy(board, history[curmove], BOARDMEMORYLEN);
@@ -204,6 +227,7 @@ void SimpleGoPanel::MakeMove(int x, int y)
 		capturehist[curmove][oppcolour-1] = capturehist[curmove-1][oppcolour-1];
 		totmove = curmove;
 		UpdateStatus();
+		finishedgame = capturehist[curmove][0]>=5 || capturehist[curmove][1]>=5 || HasPente(board);
 	}
 }
 
@@ -237,12 +261,14 @@ void SimpleGoPanel::MakeMoveSGF(int x, int y)
 	capturehist[curmove][colour-1] = capturehist[curmove-1][colour-1] + captures;
 	capturehist[curmove][oppcolour-1] = capturehist[curmove-1][oppcolour-1];
 	totmove = curmove;
+	finishedgame = capturehist[curmove][0]>=5 || capturehist[curmove][1]>=5 || HasPente(board);
 }
 
 // Initialize the current board and history variables
 void SimpleGoPanel::InitGame()
 {	curmove = 0;
 	totmove = 0;
+	finishedgame = false;
 	if(history!=NULL)
 		free(history);
 	if(movelist!=NULL)
