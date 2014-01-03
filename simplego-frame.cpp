@@ -6,6 +6,7 @@
 #endif
 #include "simplego-frame.h"
 #include "simplego-panel.h"
+#include "simplego-settings.h"
 
 // Frame constructor - create the panel and add menus and status bar to it
 SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(NULL, -1, title, pos, size, style)
@@ -17,6 +18,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	
 	gamemenu->Append(ID_NEW_GAME, wxT("&New game"));
 	gamemenu->Append(ID_BOARD_SIZE, wxT("&Board size..."));
+	gamemenu->Append(ID_SETTINGS, wxT("&Settings..."));
 	playmenu->Append(ID_PASS, wxT("&Pass"));
 	playmenu->Append(ID_GO_TO_MOVE, wxT("&Go to move..."));
 	playmenu->Append(ID_GNUGO, wxT("&Make GNU Go move"));
@@ -39,6 +41,7 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
 	Connect(ID_BOARD_SIZE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GetBoard));
+	Connect(ID_SETTINGS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Settings));
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
@@ -210,6 +213,14 @@ void SimpleGoFrame::GetBoard(wxCommandEvent& event)
 		panel->InitGame();
 		SetSize(num);
 		panel->UpdateBoard();
+	}
+}
+
+// Settings... menu command
+void SimpleGoFrame::Settings(wxCommandEvent& event)
+{	SimpleGoSettingsDialog dialog(this);
+	if(dialog.ShowModal() == wxID_OK)
+	{
 	}
 }
 
