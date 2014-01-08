@@ -44,6 +44,13 @@ private:
 public:
 	wxMenu* gamemenu;
 	wxMenu* playmenu;
+	wxString blackname;
+	wxString whitename;
+	int blacklevel;
+	int whitelevel;
+	double komi;
+	double timeout;
+	bool suicide;
 	void MakeGNUGoMove();
 	void MakeGNUGoScore();
 	SimpleGoPanel* panel;

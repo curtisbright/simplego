@@ -219,9 +219,7 @@ void SimpleGoFrame::GetBoard(wxCommandEvent& event)
 // Settings... menu command
 void SimpleGoFrame::Settings(wxCommandEvent& event)
 {	SimpleGoSettingsDialog dialog(this);
-	if(dialog.ShowModal() == wxID_OK)
-	{
-	}
+	dialog.ShowModal();
 }
 
 // Pass menu command

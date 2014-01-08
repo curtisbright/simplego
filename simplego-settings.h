@@ -1,7 +1,16 @@
 class SimpleGoSettingsDialog : public wxDialog
 {
 private:
-
+	enum {ID_OK=wxID_HIGHEST+1};
+	SimpleGoFrame* frame;
+	wxTextCtrl* blackname;
+	wxTextCtrl* whitename;
+	wxChoice* blacklevel;
+	wxChoice* whitelevel;
+	wxTextCtrl* komi;
+	wxTextCtrl* timeout;
+	wxCheckBox* suicide;
+	void UpdateSettings(wxCommandEvent& event);
 public:
-	SimpleGoSettingsDialog(wxWindow* parent);
+	SimpleGoSettingsDialog(SimpleGoFrame* parent);
 };
