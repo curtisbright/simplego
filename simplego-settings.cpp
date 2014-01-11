@@ -7,43 +7,60 @@ SimpleGoSettingsDialog::SimpleGoSettingsDialog(SimpleGoFrame* parent) : wxDialog
 {	frame = parent;
 	wxGridSizer* sizer = new wxGridSizer(2, 0, 0);
 	SetSizer(sizer);
-	wxStaticText* blackprompt = new wxStaticText(this, wxID_ANY, "Black Name:");
-	wxStaticText* whiteprompt = new wxStaticText(this, wxID_ANY, "White Name:");
+	
+	wxStaticText* blacknameprompt = new wxStaticText(this, wxID_ANY, "Black Name:");
+	wxStaticText* whitenameprompt = new wxStaticText(this, wxID_ANY, "White Name:");
+	wxStaticText* blacklevelprompt = new wxStaticText(this, wxID_ANY, "Black GNU Go:");
+	wxStaticText* whitelevelprompt = new wxStaticText(this, wxID_ANY, "White GNU Go:");
+	wxStaticText* timeoutprompt = new wxStaticText(this, wxID_ANY, "GNU Go Time:");
+	wxStaticText* komiprompt = new wxStaticText(this, wxID_ANY, "Komi:");
+	wxStaticText* suicideprompt = new wxStaticText(this, wxID_ANY, "Suicide:");
+	wxButton* cancelbutton = new wxButton(this, ID_CANCEL, "Cancel");
+	wxButton* okbutton = new wxButton(this, ID_OK, "OK");
+
+	wxString levels[11] = {"Off", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};        
+	wxString offon[2] = {"Off", "On"};
+	wxArrayString* arrlevels = new wxArrayString(11, levels);
+	wxArrayString* arroffon = new wxArrayString(2, offon);
+	
 	blackname = new wxTextCtrl(this, wxID_ANY, frame->blackname, wxDefaultPosition, wxSize(100, -1));
 	whitename = new wxTextCtrl(this, wxID_ANY, frame->whitename, wxDefaultPosition, wxSize(100, -1));
-	sizer->Add(blackprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
-	sizer->Add(blackname, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
-	sizer->Add(whiteprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
-	sizer->Add(whitename, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
-	wxStaticText* blackgnugoprompt = new wxStaticText(this, wxID_ANY, "Black GNU Go:");
-	wxStaticText* whitegnugoprompt = new wxStaticText(this, wxID_ANY, "White GNU Go:");
-	wxString levels[11] = {"Off", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};        
-	wxArrayString* str = new wxArrayString(11, levels);
-	blacklevel = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxSize(100, -1), *str);
-	whitelevel = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxSize(100, -1), *str);
+	blacklevel = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxSize(100, -1), *arrlevels);
+	whitelevel = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxSize(100, -1), *arrlevels);
+	timeout = new wxTextCtrl(this, wxID_ANY, wxString::FromDouble(frame->timeout), wxDefaultPosition, wxSize(100, -1));
+	komi = new wxTextCtrl(this, wxID_ANY, wxString::FromDouble(frame->komi), wxDefaultPosition, wxSize(100, -1));
+	suicide = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxSize(100, -1), *arroffon);
+	
 	blacklevel->SetSelection(frame->blacklevel);
 	whitelevel->SetSelection(frame->whitelevel);
-	sizer->Add(blackgnugoprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	suicide->SetSelection(frame->suicide);
+	
+	sizer->Add(blacknameprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	sizer->Add(blackname, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
+	sizer->Add(whitenameprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	sizer->Add(whitename, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
+	sizer->Add(blacklevelprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
 	sizer->Add(blacklevel, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
-	sizer->Add(whitegnugoprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	sizer->Add(whitelevelprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
 	sizer->Add(whitelevel, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
-	wxStaticText* komiprompt = new wxStaticText(this, wxID_ANY, "Komi:");
-	komi = new wxTextCtrl(this, wxID_ANY, wxString::FromDouble(frame->komi), wxDefaultPosition, wxSize(100, -1));
-	wxStaticText* timeoutprompt = new wxStaticText(this, wxID_ANY, "GNU Go Time:");
-	timeout = new wxTextCtrl(this, wxID_ANY, wxString::FromDouble(frame->timeout), wxDefaultPosition, wxSize(100, -1));
-	suicide = new wxCheckBox(this, wxID_ANY, "Allow suicide");
-	suicide->SetValue(frame->suicide);
-	wxButton* okbutton = new wxButton(this, ID_OK, "OK");
-	sizer->Add(komiprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
-	sizer->Add(komi, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
 	sizer->Add(timeoutprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
 	sizer->Add(timeout, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
-	sizer->Add(suicide, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	sizer->Add(komiprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	sizer->Add(komi, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
+	sizer->Add(suicideprompt, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_RIGHT, 2);
+	sizer->Add(suicide, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
+	sizer->Add(cancelbutton, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
 	sizer->Add(okbutton, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
 	sizer->Fit(this);
 	
+	Connect(ID_CANCEL, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SimpleGoSettingsDialog::CancelClick));
 	Connect(ID_OK, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SimpleGoSettingsDialog::OKClick));
 	Connect(wxEVT_CHAR_HOOK, wxKeyEventHandler(SimpleGoSettingsDialog::KeyDown));
+}
+
+// Process a click on OK by closing the dialog
+void SimpleGoSettingsDialog::CancelClick(wxCommandEvent& event)
+{	EndModal(0);
 }
 
 // Process a click on OK by updating settings and closing the dialog
@@ -71,5 +88,5 @@ void SimpleGoSettingsDialog::UpdateSettings()
 	frame->whitelevel = whitelevel->GetSelection();
 	frame->komi = wxAtof(wxString::Format("%.1f", wxAtof(komi->GetValue())));
 	frame->timeout = wxAtoi(timeout->GetValue());
-	frame->suicide = suicide->GetValue();
+	frame->suicide = suicide->GetSelection();
 }
