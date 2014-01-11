@@ -10,7 +10,9 @@ private:
 	wxTextCtrl* komi;
 	wxTextCtrl* timeout;
 	wxCheckBox* suicide;
-	void UpdateSettings(wxCommandEvent& event);
+	void OKClick(wxCommandEvent& event);
+	void KeyDown(wxKeyEvent& event);
+	void UpdateSettings();
 public:
 	SimpleGoSettingsDialog(SimpleGoFrame* parent);
 };

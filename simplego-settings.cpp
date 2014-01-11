@@ -42,11 +42,29 @@ SimpleGoSettingsDialog::SimpleGoSettingsDialog(SimpleGoFrame* parent) : wxDialog
 	sizer->Add(okbutton, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
 	sizer->Fit(this);
 	
-	Connect(ID_OK, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SimpleGoSettingsDialog::UpdateSettings));
+	Connect(ID_OK, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SimpleGoSettingsDialog::OKClick));
+	Connect(wxEVT_CHAR_HOOK, wxKeyEventHandler(SimpleGoSettingsDialog::KeyDown));
 }
 
-// Update settings and close the dialog
-void SimpleGoSettingsDialog::UpdateSettings(wxCommandEvent& event)
+// Process a click on OK by updating settings and closing the dialog
+void SimpleGoSettingsDialog::OKClick(wxCommandEvent& event)
+{	UpdateSettings();
+	EndModal(0);
+}
+
+// Process a key press
+void SimpleGoSettingsDialog::KeyDown(wxKeyEvent& event)
+{	if(event.GetKeyCode()==WXK_RETURN||event.GetKeyCode()==WXK_NUMPAD_ENTER)
+	{	UpdateSettings();
+		EndModal(0);
+	}
+	else if(event.GetKeyCode()==WXK_ESCAPE)
+		EndModal(0);
+	event.Skip();
+}
+
+// Update settings
+void SimpleGoSettingsDialog::UpdateSettings()
 {	frame->blackname = blackname->GetValue();
 	frame->whitename = whitename->GetValue();
 	frame->blacklevel = blacklevel->GetSelection();
@@ -54,5 +72,4 @@ void SimpleGoSettingsDialog::UpdateSettings(wxCommandEvent& event)
 	frame->komi = wxAtof(wxString::Format("%.1f", wxAtof(komi->GetValue())));
 	frame->timeout = wxAtoi(timeout->GetValue());
 	frame->suicide = suicide->GetValue();
-	EndModal(0);
 }
