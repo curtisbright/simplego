@@ -123,7 +123,7 @@ bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, bool checkdupes)
 		RemoveGroup(board, x, y+1);
 	if(board[x][y-1]==oppcolour && !HasLiberties(board, x, y-1))
 		RemoveGroup(board, x, y-1);
-	if(!frame->gamemenu->IsChecked(ID_SUICIDE) && !HasLiberties(board, x, y))
+	if(!frame->suicide && !HasLiberties(board, x, y))
 		return false;
 	else if(!HasLiberties(board, x, y))
 		RemoveGroup(board, x, y);

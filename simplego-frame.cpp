@@ -23,7 +23,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_GO_TO_MOVE, wxT("&Go to move..."));
 	playmenu->Append(ID_GNUGO, wxT("&Make GNU Go move"));
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
-	gamemenu->Append(ID_SUICIDE, wxT("&Allow suicide"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_GNUGO_WHITE, wxT("GNU Go plays &White"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_GNUGO_LEVEL, wxT("&GNU Go level..."));
 	gamemenu->Append(ID_SCORE_GAME, wxT("S&core game"));
@@ -83,7 +82,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		dup2(out[1], STDOUT_FILENO);
 		close(in[1]);
 		close(out[0]);
-		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
+		sprintf(str, "--%s-suicide", suicide ? "allow" : "forbid");
 		sprintf(strtime, "%d", timeout);
 		sprintf(strkomi, "%.1f", komi);
 		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", gnugolevel, "--never-resign", "--komi", strkomi, "--clock", strtime, NULL);
@@ -150,7 +149,7 @@ void SimpleGoFrame::MakeGNUGoScore()
 		struct rlimit limit;
 		limit.rlim_cur = timeout;
 		setrlimit(RLIMIT_CPU, &limit);
-		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
+		sprintf(str, "--%s-suicide", suicide ? "allow" : "forbid");
 		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", str, NULL);
 	}
 	
