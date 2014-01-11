@@ -70,7 +70,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 {	int in[2], out[2], n;
 	char buf[256];
 	char data[256] = {0};
-	char str[256];
+	char str[256], strtime[32], strkomi[32];
 
 	#ifndef __WXMSW__
 	pipe(in);
@@ -83,11 +83,10 @@ void SimpleGoFrame::MakeGNUGoMove()
 		dup2(out[1], STDOUT_FILENO);
 		close(in[1]);
 		close(out[0]);
-		struct rlimit limit; 
-		limit.rlim_cur = 3;
-		setrlimit(RLIMIT_CPU, &limit);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
-		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", gnugolevel, "--never-resign", "--komi", "6.5", NULL);
+		sprintf(strtime, "%d", timeout);
+		sprintf(strkomi, "%.1f", komi);
+		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", gnugolevel, "--never-resign", "--komi", strkomi, "--clock", strtime, NULL);
 	}
 	
 	close(in[0]);
@@ -148,8 +147,8 @@ void SimpleGoFrame::MakeGNUGoScore()
 		dup2(out[1], STDOUT_FILENO);
 		close(in[1]);
 		close(out[0]);
-		struct rlimit limit; 
-		limit.rlim_cur = 3;
+		struct rlimit limit;
+		limit.rlim_cur = timeout;
 		setrlimit(RLIMIT_CPU, &limit);
 		sprintf(str, "--%s-suicide", gamemenu->IsChecked(ID_SUICIDE) ? "allow" : "forbid");
 		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", str, NULL);

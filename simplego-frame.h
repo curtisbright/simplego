@@ -49,7 +49,7 @@ public:
 	int blacklevel;
 	int whitelevel;
 	double komi;
-	double timeout;
+	int timeout;
 	bool suicide;
 	void MakeGNUGoMove();
 	void MakeGNUGoScore();

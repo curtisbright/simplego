@@ -51,8 +51,8 @@ void SimpleGoSettingsDialog::UpdateSettings(wxCommandEvent& event)
 	frame->whitename = whitename->GetValue();
 	frame->blacklevel = blacklevel->GetSelection();
 	frame->whitelevel = whitelevel->GetSelection();
-	frame->komi = wxAtof(komi->GetValue());
-	frame->timeout = wxAtof(timeout->GetValue());
+	frame->komi = wxAtof(wxString::Format("%.1f", wxAtof(komi->GetValue())));
+	frame->timeout = wxAtoi(timeout->GetValue());
 	frame->suicide = suicide->GetValue();
 	EndModal(0);
 }
