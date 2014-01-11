@@ -24,7 +24,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_GNUGO, wxT("&Make GNU Go move"));
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_GNUGO_WHITE, wxT("GNU Go plays &White"), "", wxITEM_CHECK);
-	gamemenu->Append(ID_GNUGO_LEVEL, wxT("&GNU Go level..."));
 	gamemenu->Append(ID_SCORE_GAME, wxT("S&core game"));
 	gamemenu->Append(ID_LOAD_GAME, wxT("&Load game..."));
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."));
@@ -34,7 +33,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	#ifdef __WXMSW__
 	playmenu->Enable(ID_GNUGO, false);
 	gamemenu->Enable(ID_GNUGO_WHITE, false);
-	gamemenu->Enable(ID_GNUGO_LEVEL, false);
 	gamemenu->Enable(ID_SCORE_GAME, false);
 	#endif
 	
@@ -45,7 +43,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
 	Connect(ID_GNUGO_WHITE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoWhite));
-	Connect(ID_GNUGO_LEVEL, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoLevel));
 	Connect(ID_SCORE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::ScoreGame));
 	Connect(ID_LOAD_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::LoadGame));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
@@ -57,7 +54,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	SetMenuBar(menubar);
 	
 	int styles[3] = {wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN};
-	strcpy(gnugolevel, "10");
 	CreateStatusBar(3, wxSTB_SHOW_TIPS)->SetStatusStyles(3, styles);
 	SetClientSize(16*(panel->boardsize+1), 16*(panel->boardsize+1));
 	panel->InitGame();
@@ -69,7 +65,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 {	int in[2], out[2], n;
 	char buf[256];
 	char data[256] = {0};
-	char str[256], strtime[32], strkomi[32];
+	char str[256], strtime[32], strkomi[32], strlevel[32];
 
 	#ifndef __WXMSW__
 	pipe(in);
@@ -85,7 +81,8 @@ void SimpleGoFrame::MakeGNUGoMove()
 		sprintf(str, "--%s-suicide", suicide ? "allow" : "forbid");
 		sprintf(strtime, "%d", timeout);
 		sprintf(strkomi, "%.1f", komi);
-		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", gnugolevel, "--never-resign", "--komi", strkomi, "--clock", strtime, NULL);
+		sprintf(strlevel, "%d", panel->curmove%2 ? whitelevel : blacklevel);
+		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", strlevel[0]=='0' ? "10" : strlevel, "--never-resign", "--komi", strkomi, "--clock", strtime, NULL);
 	}
 	
 	close(in[0]);
@@ -244,13 +241,6 @@ void SimpleGoFrame::GNUGoMove(wxCommandEvent& event)
 void SimpleGoFrame::GNUGoWhite(wxCommandEvent& event)
 {	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
 		MakeGNUGoMove();
-}
-
-// GNU Go level... command
-void SimpleGoFrame::GNUGoLevel(wxCommandEvent& event)
-{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the level for GNU Go to play at, between 1 and 10:"), "GNU Go level", gnugolevel));
-	if(num>=1 && num<=10)
-		sprintf(gnugolevel, "%d", num);
 }
 
 // Score game menu command

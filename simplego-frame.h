@@ -15,7 +15,6 @@ enum {
 	ID_GNUGO_WHITE,
 	ID_LOAD_GAME,
 	ID_SCORE_GAME,
-	ID_GNUGO_LEVEL,
 	ID_SETTINGS
 };
 
@@ -31,14 +30,12 @@ private:
 	void GoToMove(wxCommandEvent& event);
 	void GNUGoMove(wxCommandEvent& event);
 	void GNUGoWhite(wxCommandEvent& event);
-	void GNUGoLevel(wxCommandEvent& event);
 	void ScoreGame(wxCommandEvent& event);
 	void LoadGame(wxCommandEvent& event);
 	void SaveGame(wxCommandEvent& event);
 	void About(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);
 	void SetSize(int boardsize);
-	char gnugolevel[3];
 
 public:
 	wxMenu* gamemenu;
