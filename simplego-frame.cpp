@@ -7,6 +7,7 @@
 #include "simplego-frame.h"
 #include "simplego-panel.h"
 #include "simplego-settings.h"
+#include "simplego-statusbar.h"
 
 // Frame constructor - create the panel and add menus and status bar to it
 SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(NULL, -1, title, pos, size, style)
@@ -53,9 +54,13 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	menubar->Append(playmenu, wxT("&Play"));
 	SetMenuBar(menubar);
 	
-	int styles[3] = {wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN};
-	CreateStatusBar(3, wxSTB_SHOW_TIPS)->SetStatusStyles(3, styles);
+	int styles[1] = {wxSB_SUNKEN};
+	statusbar = new SimpleGoStatusBar(this);
+	SetStatusBar(statusbar);
+	PositionStatusBar();
+	statusbar->SetStatusStyles(1, styles);
 	SetClientSize(16*(panel->boardsize+1), 16*(panel->boardsize+1));
+	
 	panel->InitGame();
 	panel->UpdateBoard();
 }

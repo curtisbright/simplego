@@ -19,6 +19,7 @@ enum {
 };
 
 class SimpleGoPanel;
+class SimpleGoStatusBar;
 
 class SimpleGoFrame : public wxFrame
 {	
@@ -38,6 +39,7 @@ private:
 	void SetSize(int boardsize);
 
 public:
+	SimpleGoStatusBar* statusbar;
 	wxMenu* gamemenu;
 	wxMenu* playmenu;
 	wxString blackname;

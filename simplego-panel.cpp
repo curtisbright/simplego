@@ -1,6 +1,7 @@
 #include <wx/wx.h>
 #include "simplego-panel.h"
 #include "simplego-frame.h"
+#include "simplego-statusbar.h"
 
 // Panel constructor
 SimpleGoPanel::SimpleGoPanel(SimpleGoFrame* parent) : wxPanel(parent)
@@ -44,7 +45,7 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 				else if(gnugoboard[i][j]==WHITE)
 					score--;
 		
-		frame->SetStatusText(wxString::Format("%s%c+%d.5", boardsize>12 ? "S: " : "", score>0 ? 'B' : 'W', score>0 ? score-1 : -score), 2);
+		frame->statusbar->SetScore(wxString::Format("%c+%d.5", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
 	}
 	else
 	{	char temp[21][21];
@@ -59,14 +60,14 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 				else if(temp[i][j]==WHITE)
 					whitescore++;
 		
-		frame->SetStatusText(wxString::Format("%s%d-%d", boardsize>12 ? "S: " : "", blackscore, whitescore), 2);
+		frame->statusbar->SetScore(wxString::Format("%d-%d", blackscore, whitescore));
 	}
 }
 
 // Update turn and move info on status bar
 void SimpleGoPanel::UpdateStatus()
-{	frame->SetStatusText(wxString::Format("%s%s", boardsize>12 ? "T: " : "", curmove%2==0 ? "Black" : "White"), 0);
-	frame->SetStatusText(wxString::Format("%s%d", boardsize>12 ? "M: " : "", curmove), 1);
+{	frame->statusbar->SetTurn(wxString::Format("%s", curmove%2==0 ? "Black" : "White"));
+	frame->statusbar->SetMoveNum(wxString::Format("%d", curmove));
 }
 
 // Remove the group on the given board containing cell (x, y)
