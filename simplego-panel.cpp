@@ -34,9 +34,11 @@ void SimpleGoPanel::SpreadArea(char board[21][21], int x, int y, int colour)
 	}
 }
 
-// Calculate the score of the given board and update the status bar
-void SimpleGoPanel::ScoreGame(char board[21][21])
-{	if(gnugoscore)
+// Update turn and move info on status bar
+void SimpleGoPanel::UpdateStatus()
+{	frame->statusbar->SetTurn(wxString::Format("%s", curmove%2==0 ? "Black" : "White"));
+	frame->statusbar->SetMoveNum(wxString::Format("%d", curmove));
+	if(gnugoscore)
 	{	int score = -6;
 		for(int i=1; i<=boardsize; i++)
 			for(int j=1; j<=boardsize; j++)
@@ -48,26 +50,7 @@ void SimpleGoPanel::ScoreGame(char board[21][21])
 		frame->statusbar->SetScore(wxString::Format("%c+%d.5", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
 	}
 	else
-	{	char temp[21][21];
-		memcpy(temp, board, BOARDMEMORYLEN);
-		ScoreArea(temp);
-		
-		int whitescore = 0, blackscore = 0;
-		for(int i=1; i<=boardsize; i++)
-			for(int j=1; j<=boardsize; j++)
-				if(temp[i][j]==BLACK)
-					blackscore++;
-				else if(temp[i][j]==WHITE)
-					whitescore++;
-		
-		frame->statusbar->SetScore(wxString::Format("%d-%d", blackscore, whitescore));
-	}
-}
-
-// Update turn and move info on status bar
-void SimpleGoPanel::UpdateStatus()
-{	frame->statusbar->SetTurn(wxString::Format("%s", curmove%2==0 ? "Black" : "White"));
-	frame->statusbar->SetMoveNum(wxString::Format("%d", curmove));
+		frame->statusbar->SetScore("");
 }
 
 // Remove the group on the given board containing cell (x, y)
@@ -298,7 +281,6 @@ void SimpleGoPanel::UpdateBoard()
 	wxClientDC dc(this);
 	DrawBoard(dc, board);
 	UpdateStatus();
-	ScoreGame(board);
 }
 
 // Pass the current turn and update the status bar and history
@@ -315,13 +297,14 @@ void SimpleGoPanel::MakePass()
 	movelist[curmove-1].x = 0;
 	movelist[curmove-1].y = 0;
 	totmove = curmove;
-	UpdateStatus();
 	if(curmove>=2 && movelist[curmove-2].x==0 && movelist[curmove-2].y==0)
 	{	frame->playmenu->Check(ID_RANDOM, false);
 		frame->MakeGNUGoScore();
 	}
 	else if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
 		frame->MakeGNUGoMove();
+	else
+		UpdateStatus();
 }
 
 // Make a move on cell (x, y) if legal, and update the current board info and history
@@ -354,10 +337,10 @@ void SimpleGoPanel::MakeMove(int x, int y)
 		movelist[curmove-1].x = x;
 		movelist[curmove-1].y = y;
 		totmove = curmove;
-		UpdateStatus();
-		ScoreGame(board);
 		if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
 			frame->MakeGNUGoMove();
+		else
+			UpdateStatus();
 	}
 }
 

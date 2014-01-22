@@ -20,7 +20,6 @@ private:
 	char (*history)[21][21];	// All previous board positions
 	struct pos {int x, y;};
 	void SpreadArea(char board[21][21], int x, int y, int colour);
-	void ScoreGame(char board[21][21]);
 	void UpdateStatus();
 	void RemoveGroup(char board[21][21], int x, int y);
 	bool HasLibertiesRec(char board[21][21], int x, int y);
