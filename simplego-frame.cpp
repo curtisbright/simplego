@@ -34,7 +34,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	#ifdef __WXMSW__
 	playmenu->Enable(ID_GNUGO, false);
 	gamemenu->Enable(ID_GNUGO_WHITE, false);
-	gamemenu->Enable(ID_SCORE_GAME, false);
 	#endif
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
@@ -136,6 +135,8 @@ void SimpleGoFrame::MakeGNUGoScore()
 	char buf[256];
 	char data[2048] = {0};
 	char str[256];
+	
+	memcpy(panel->gnugoboard, panel->board, BOARDMEMORYLEN);
 
 	#ifndef __WXMSW__
 	pipe(in);
@@ -175,8 +176,6 @@ void SimpleGoFrame::MakeGNUGoScore()
 	
 	close(in[1]);
 
-	memcpy(panel->gnugoboard, panel->board, BOARDMEMORYLEN);
-
 	while(read(out[0], buf, 1))
 		if(buf[0] == '=')
 		{	while(n = read(out[0], buf, 255))
@@ -192,11 +191,11 @@ void SimpleGoFrame::MakeGNUGoScore()
 		}
 	
 	close(out[0]);
+	#endif
 	
 	panel->ScoreArea(panel->gnugoboard);
 	panel->gnugoscore = true;
 	panel->UpdateBoard();
-	#endif
 }
 
 // New game menu command
