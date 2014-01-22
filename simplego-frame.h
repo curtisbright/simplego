@@ -49,6 +49,7 @@ public:
 	double komi;
 	int timeout;
 	bool suicide;
+	wxString score;
 	void MakeGNUGoMove();
 	void MakeGNUGoScore();
 	SimpleGoPanel* panel;

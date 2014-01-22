@@ -39,21 +39,7 @@ void SimpleGoPanel::UpdateStatus()
 {	frame->statusbar->SetTurn(wxString::Format("%s", curmove%2==0 ? "Black" : "White"));
 	frame->statusbar->SetMoveNum(wxString::Format("%d", curmove));
 	if(gnugoscore)
-	{	double score = -frame->komi;
-		for(int i=1; i<=boardsize; i++)
-			for(int j=1; j<=boardsize; j++)
-				if(gnugoboard[i][j]==BLACK)
-					score++;
-				else if(gnugoboard[i][j]==WHITE)
-					score--;
-		
-		if(score==0)
-			frame->statusbar->SetScore("Draw");
-		else if((int)score==score)
-			frame->statusbar->SetScore(wxString::Format("%c+%.0f", score>=0 ? 'B' : 'W', fabs(score)));
-		else
-			frame->statusbar->SetScore(wxString::Format("%c+%.1f", score>=0 ? 'B' : 'W', fabs(score)));
-	}
+		frame->statusbar->SetScore(frame->score);
 	else
 		frame->statusbar->SetScore("");
 }

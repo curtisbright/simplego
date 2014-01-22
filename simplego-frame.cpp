@@ -195,6 +195,22 @@ void SimpleGoFrame::MakeGNUGoScore()
 	
 	panel->ScoreArea(panel->gnugoboard);
 	panel->gnugoscore = true;
+	
+	double fscore = -komi;
+	for(int i=1; i<=panel->boardsize; i++)
+		for(int j=1; j<=panel->boardsize; j++)
+			if(panel->gnugoboard[i][j]==BLACK)
+				fscore++;
+			else if(panel->gnugoboard[i][j]==WHITE)
+				fscore--;
+					
+	if(fscore==0)
+		score = "Draw";
+	else if((int)fscore==fscore)
+		score = wxString::Format("%c+%.0f", fscore>0 ? 'B' : 'W', fabs(fscore));
+	else
+		score = wxString::Format("%c+%.1f", fscore>0 ? 'B' : 'W', fabs(fscore));
+	
 	panel->UpdateBoard();
 }
 
@@ -321,16 +337,12 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 		escwhitename.Replace("\\", "\\\\");
 		escwhitename.Replace("]", "\\]");
 		file.Write(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]PB[%s]PW[%s]", panel->boardsize, VERSION, escblackname, escwhitename));
+		if((int)komi==komi)
+			file.Write(wxString::Format("KM[%.0f]", komi));
+		else
+			file.Write(wxString::Format("KM[%.1f]", komi));
 		if(panel->gnugoscore)
-		{	int score = -6;
-			for(int i=1; i<=panel->boardsize; i++)
-				for(int j=1; j<=panel->boardsize; j++)
-					if(panel->gnugoboard[i][j]==BLACK)
-						score++;
-					else if(panel->gnugoboard[i][j]==WHITE)
-						score--;
-			file.Write(wxString::Format("KM[6.5]RE[%c+%d.5]", score>0 ? 'B' : 'W', score>0 ? score-1 : -score));
-		}
+			file.Write(wxString::Format("RE[%s]", score));
 		for(int i=0; i<panel->totmove; i++)
 		{	if(panel->movelist[i].x==0&&panel->movelist[i].y==0)
 				file.Write(wxString::Format(";%c[]", i%2 ? 'W' : 'B'));
