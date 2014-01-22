@@ -228,11 +228,14 @@ void SimpleGoFrame::Pass(wxCommandEvent& event)
 
 // Go to move... menu command
 void SimpleGoFrame::GoToMove(wxCommandEvent& event)
-{	int num = wxAtoi(wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", ""));
-	if(num>=0 && num<=panel->totmove)
-	{	panel->gnugoscore = false;
-		panel->curmove = num;
-		panel->UpdateBoard();
+{	wxString input = wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "");
+	if(!input.IsSameAs(""))
+	{	int num = wxAtoi(input);
+		if(num>=0 && num<=panel->totmove)
+		{	panel->gnugoscore = false;
+			panel->curmove = num;
+			panel->UpdateBoard();
+		}
 	}
 }
 
