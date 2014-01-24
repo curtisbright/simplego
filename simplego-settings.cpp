@@ -53,6 +53,12 @@ SimpleGoSettingsDialog::SimpleGoSettingsDialog(SimpleGoFrame* parent) : wxDialog
 	sizer->Add(okbutton, 0, wxALL | wxALIGN_CENTRE_VERTICAL | wxALIGN_CENTRE, 2);
 	sizer->Fit(this);
 	
+	#ifdef __WXMSW__
+	blacklevel->Enable(false);
+	whitelevel->Enable(false);
+	timeout->Enable(false);
+	#endif
+	
 	Connect(ID_CANCEL, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SimpleGoSettingsDialog::CancelClick));
 	Connect(ID_OK, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SimpleGoSettingsDialog::OKClick));
 	Connect(wxEVT_CHAR_HOOK, wxKeyEventHandler(SimpleGoSettingsDialog::KeyDown));
