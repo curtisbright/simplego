@@ -24,7 +24,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	playmenu->Append(ID_GO_TO_MOVE, wxT("&Go to move..."));
 	playmenu->Append(ID_GNUGO, wxT("&Make GNU Go move"));
 	playmenu->Append(ID_RANDOM, wxT("&Random!"), "", wxITEM_CHECK);
-	gamemenu->Append(ID_GNUGO_WHITE, wxT("GNU Go plays &White"), "", wxITEM_CHECK);
 	gamemenu->Append(ID_SCORE_GAME, wxT("S&core game"));
 	gamemenu->Append(ID_LOAD_GAME, wxT("&Load game..."));
 	gamemenu->Append(ID_SAVE_GAME, wxT("&Save game..."));
@@ -33,7 +32,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	
 	#ifdef __WXMSW__
 	playmenu->Enable(ID_GNUGO, false);
-	gamemenu->Enable(ID_GNUGO_WHITE, false);
 	#endif
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
@@ -42,7 +40,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_PASS, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::Pass));
 	Connect(ID_GO_TO_MOVE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GoToMove));
 	Connect(ID_GNUGO, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoMove));
-	Connect(ID_GNUGO_WHITE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::GNUGoWhite));
 	Connect(ID_SCORE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::ScoreGame));
 	Connect(ID_LOAD_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::LoadGame));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
@@ -234,7 +231,9 @@ void SimpleGoFrame::GetBoard(wxCommandEvent& event)
 // Settings... menu command
 void SimpleGoFrame::Settings(wxCommandEvent& event)
 {	SimpleGoSettingsDialog dialog(this);
-	dialog.ShowModal();
+	if(dialog.ShowModal()==1)
+		if(!(panel->curmove>=2 && panel->movelist[panel->curmove-1].x==0 && panel->movelist[panel->curmove-2].x==0))
+			panel->gnugopause = false;
 }
 
 // Pass menu command
@@ -248,7 +247,8 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& event)
 	if(!input.IsSameAs(""))
 	{	int num = wxAtoi(input);
 		if(num>=0 && num<=panel->totmove)
-		{	panel->gnugoscore = false;
+		{	panel->gnugopause = true;
+			panel->gnugoscore = false;
 			panel->curmove = num;
 			panel->UpdateBoard();
 		}
@@ -258,12 +258,6 @@ void SimpleGoFrame::GoToMove(wxCommandEvent& event)
 // GNU Go move menu command
 void SimpleGoFrame::GNUGoMove(wxCommandEvent& event)
 {	MakeGNUGoMove();
-}
-
-// GNU Go plays White menu command
-void SimpleGoFrame::GNUGoWhite(wxCommandEvent& event)
-{	if(panel->curmove%2==1 && gamemenu->IsChecked(ID_GNUGO_WHITE))
-		MakeGNUGoMove();
 }
 
 // Score game menu command
@@ -277,8 +271,6 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
 	{	wxFile file(LoadDialog.GetPath());
-		bool prevgnugoplay = gamemenu->IsChecked(ID_GNUGO_WHITE);
-		gamemenu->Check(ID_GNUGO_WHITE, false);
 		bool sizeset = false;
 		wxString str;
 		file.ReadAll(&str);
@@ -312,7 +304,6 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 			}
 		}
 		file.Close();
-		gamemenu->Check(ID_GNUGO_WHITE, prevgnugoplay);
 		SetSize(panel->boardsize);
 		panel->UpdateBoard();
 	}

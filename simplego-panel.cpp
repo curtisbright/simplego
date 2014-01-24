@@ -193,7 +193,10 @@ void SimpleGoPanel::DrawBoard(wxDC& dc, char board[21][21])
 // During idle time make random moves if Random! has been selected
 void SimpleGoPanel::Idle(wxIdleEvent& event)
 {	if(!frame->playmenu->IsChecked(ID_RANDOM))
+	{	if(!gnugopause && ((curmove%2==1 && frame->whitelevel>0) || (curmove%2==0 && frame->blacklevel>0)))
+			frame->MakeGNUGoMove();
 		return;
+	}
 
 	int x = 1+rand()%boardsize, y = 1+rand()%boardsize;
 	char attempts[21][21], temp[21][21];
@@ -234,7 +237,8 @@ void SimpleGoPanel::LMouseUp(wxMouseEvent& event)
 // left/right moves through history; 'p' passes the turn
 void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 {	if(event.GetKeyCode()==WXK_LEFT&&curmove>0)
-	{	gnugoscore = false;
+	{	gnugopause = true;
+		gnugoscore = false;
 		curmove--;
 		UpdateBoard();
 	}
@@ -289,11 +293,10 @@ void SimpleGoPanel::MakePass()
 	movelist[curmove-1].y = 0;
 	totmove = curmove;
 	if(curmove>=2 && movelist[curmove-2].x==0 && movelist[curmove-2].y==0)
-	{	frame->playmenu->Check(ID_RANDOM, false);
+	{	gnugopause = true;
+		frame->playmenu->Check(ID_RANDOM, false);
 		frame->MakeGNUGoScore();
 	}
-	else if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
-		frame->MakeGNUGoMove();
 	else
 		UpdateStatus();
 }
@@ -328,10 +331,8 @@ void SimpleGoPanel::MakeMove(int x, int y)
 		movelist[curmove-1].x = x;
 		movelist[curmove-1].y = y;
 		totmove = curmove;
-		if(curmove%2==1 && frame->gamemenu->IsChecked(ID_GNUGO_WHITE))
-			frame->MakeGNUGoMove();
-		else
-			UpdateStatus();
+		UpdateStatus();
+		gnugopause = false;
 	}
 }
 
@@ -368,6 +369,7 @@ void SimpleGoPanel::MakeMoveSGF(int x, int y)
 // Initialize the current board and history variables
 void SimpleGoPanel::InitGame()
 {	gnugoscore = false;
+	gnugopause = false;
 	curmove = 0;
 	totmove = 0;
 	if(history!=NULL)

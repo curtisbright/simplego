@@ -66,14 +66,14 @@ void SimpleGoSettingsDialog::CancelClick(wxCommandEvent& event)
 // Process a click on OK by updating settings and closing the dialog
 void SimpleGoSettingsDialog::OKClick(wxCommandEvent& event)
 {	UpdateSettings();
-	EndModal(0);
+	EndModal(1);
 }
 
 // Process a key press
 void SimpleGoSettingsDialog::KeyDown(wxKeyEvent& event)
 {	if(event.GetKeyCode()==WXK_RETURN||event.GetKeyCode()==WXK_NUMPAD_ENTER)
 	{	UpdateSettings();
-		EndModal(0);
+		EndModal(1);
 	}
 	else if(event.GetKeyCode()==WXK_ESCAPE)
 		EndModal(0);

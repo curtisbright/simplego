@@ -12,7 +12,6 @@ enum {
 	ID_SAVE_GAME,
 	ID_ABOUT,
 	ID_GNUGO,
-	ID_GNUGO_WHITE,
 	ID_LOAD_GAME,
 	ID_SCORE_GAME,
 	ID_SETTINGS
@@ -30,7 +29,6 @@ private:
 	void Pass(wxCommandEvent& event);
 	void GoToMove(wxCommandEvent& event);
 	void GNUGoMove(wxCommandEvent& event);
-	void GNUGoWhite(wxCommandEvent& event);
 	void ScoreGame(wxCommandEvent& event);
 	void LoadGame(wxCommandEvent& event);
 	void SaveGame(wxCommandEvent& event);
