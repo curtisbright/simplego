@@ -35,6 +35,7 @@ private:
 	void About(wxCommandEvent& event);
 	void Nothing(wxMenuEvent& event);
 	void SetSize(int boardsize);
+	~SimpleGoFrame();
 
 public:
 	SimpleGoStatusBar* statusbar;

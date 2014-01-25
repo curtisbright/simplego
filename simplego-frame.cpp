@@ -1,6 +1,8 @@
 #include <wx/wx.h>
 #include <wx/aboutdlg.h>
 #include <wx/textfile.h>
+#include <wx/fileconf.h>
+#include <wx/stdpaths.h>
 #ifndef __WXMSW__
 #include <sys/resource.h>
 #endif
@@ -9,9 +11,28 @@
 #include "simplego-settings.h"
 #include "simplego-statusbar.h"
 
-// Frame constructor - create the panel and add menus and status bar to it
+// Frame constructor - read settings from config file, create the panel and add menus and status bar to it
 SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(NULL, -1, title, pos, size, style)
 {	panel = new SimpleGoPanel(this);
+	
+	wxFileConfig config("simplego", wxEmptyString, wxStandardPaths::Get().GetUserDataDir());
+	config.Read("boardsize", &(panel->boardsize), 19);
+	config.Read("blackname", &blackname, "Black");
+	config.Read("whitename", &whitename, "White");
+	config.Read("blacklevel", &blacklevel, 0);
+	config.Read("whitelevel", &whitelevel, 0);
+	config.Read("timeout", &timeout, 3);
+	config.Read("komi", &komi, 6.5);
+	config.Read("suicide", &suicide, 0);
+	
+	if(!(panel->boardsize>=2 && panel->boardsize<=19))
+		panel->boardsize = 19;
+	if(!(blacklevel>=0 && blacklevel<=10))
+		blacklevel = 0;
+	if(!(whitelevel>=0 && whitelevel<=10))
+		whitelevel = 0;
+	if(!(komi>=-1000 && komi<=1000))
+		komi = 6.5;
 	
 	wxMenuBar* menubar = new wxMenuBar;
 	gamemenu = new wxMenu;
@@ -55,10 +76,23 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	SetStatusBar(statusbar);
 	PositionStatusBar();
 	statusbar->SetStatusStyles(1, styles);
-	SetClientSize(16*(panel->boardsize+1), 16*(panel->boardsize+1));
+	SetSize(panel->boardsize);
 	
 	panel->InitGame();
 	panel->UpdateBoard();
+}
+
+// Frame destructor - save settings in config file
+SimpleGoFrame::~SimpleGoFrame()
+{	wxFileConfig config("simplego", wxEmptyString, wxStandardPaths::Get().GetUserDataDir());
+	config.Write("boardsize", panel->boardsize);
+	config.Write("blackname", blackname);
+	config.Write("whitename", whitename);
+	config.Write("blacklevel", blacklevel);
+	config.Write("whitelevel", whitelevel);
+	config.Write("timeout", timeout);
+	config.Write("komi", komi);
+	config.Write("suicide", suicide);
 }
 
 // Run GNU Go and have it play the next move
