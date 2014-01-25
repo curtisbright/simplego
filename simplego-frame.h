@@ -38,6 +38,7 @@ private:
 	~SimpleGoFrame();
 
 public:
+	SimpleGoPanel* panel;
 	SimpleGoStatusBar* statusbar;
 	wxMenu* gamemenu;
 	wxMenu* playmenu;
@@ -51,6 +52,6 @@ public:
 	wxString score;
 	void MakeGNUGoMove();
 	void MakeGNUGoScore();
-	SimpleGoPanel* panel;
+	void PlaySGF(wxString filename);
 	SimpleGoFrame(const wxString& title, const wxPoint& pos, const wxSize& size, long style);
 };

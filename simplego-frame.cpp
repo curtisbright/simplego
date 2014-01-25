@@ -304,43 +304,7 @@ void SimpleGoFrame::LoadGame(wxCommandEvent& event)
 {	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
-	{	wxFile file(LoadDialog.GetPath());
-		bool sizeset = false;
-		wxString str;
-		file.ReadAll(&str);
-		int j=0;
-		for(int i=0; i<str.Len(); i++)
-			if(strchr(" \t\r\n\v\f", str.GetChar(i))==NULL)
-				str.SetChar(j++, str.GetChar(i));
-		str.Remove(j);
-		for(int i=0; i<str.Len(); i++)
-		{	wxString substr = str.Mid(i, 3);
-			if(substr.Cmp("SZ[")==0)
-			{	int num = wxAtoi(str.Mid(i+3, 2));
-				if(num>=2&&num<=19)
-				{	panel->boardsize = num;
-					panel->InitGame();
-				}
-				sizeset = true;
-			}
-			else if((substr.Find("B[")==1 || substr.Find("W[")==1) && !(substr.GetChar(0)>='A' && substr.GetChar(0)<='Z'))
-			{	if(!sizeset)
-				{	panel->boardsize = 19;
-					panel->InitGame();
-				}
-				if(str.Mid(i+2, 2).Cmp("[]")==0)
-					panel->MakePass();
-				else if(str.Mid(i+3, 1).Cmp("a")>=0 && str.Mid(i+3, 1).Cmp("s")<=0 && str.Mid(i+4, 1).Cmp("a")>=0 && str.Mid(i+4, 1).Cmp("s")<=0)
-				{	int x = str.Mid(i+3, 1).GetChar(0) - 'a' + 1;
-					int y = str.Mid(i+4, 1).GetChar(0) - 'a' + 1;
-					panel->MakeMoveSGF(x, y);
-				}
-			}
-		}
-		file.Close();
-		SetSize(panel->boardsize);
-		panel->UpdateBoard();
-	}
+		PlaySGF(LoadDialog.GetPath());
 }
 
 // Save game... menu command
@@ -400,4 +364,46 @@ void SimpleGoFrame::SetSize(int boardsize)
 		SetClientSize(16*(boardsize+1), 16*(boardsize+1));
 	else
 		SetClientSize(160, 160);
+}
+
+// Load the game record found in the SGF file with given filename
+void SimpleGoFrame::PlaySGF(wxString filename)
+{	if(!wxFileExists(filename))
+		return;
+	wxFile file(filename);
+	bool sizeset = false;
+	wxString str;
+	file.ReadAll(&str);
+	int j=0;
+	for(int i=0; i<str.Len(); i++)
+		if(strchr(" \t\r\n\v\f", str.GetChar(i))==NULL)
+			str.SetChar(j++, str.GetChar(i));
+	str.Remove(j);
+	for(int i=0; i<str.Len(); i++)
+	{	wxString substr = str.Mid(i, 3);
+		if(substr.Cmp("SZ[")==0)
+		{	int num = wxAtoi(str.Mid(i+3, 2));
+			if(num>=2&&num<=19)
+			{	panel->boardsize = num;
+				panel->InitGame();
+			}
+			sizeset = true;
+		}
+		else if((substr.Find("B[")==1 || substr.Find("W[")==1) && !(substr.GetChar(0)>='A' && substr.GetChar(0)<='Z'))
+		{	if(!sizeset)
+			{	panel->boardsize = 19;
+				panel->InitGame();
+			}
+			if(str.Mid(i+2, 2).Cmp("[]")==0)
+				panel->MakePass();
+			else if(str.Mid(i+3, 1).Cmp("a")>=0 && str.Mid(i+3, 1).Cmp("s")<=0 && str.Mid(i+4, 1).Cmp("a")>=0 && str.Mid(i+4, 1).Cmp("s")<=0)
+			{	int x = str.Mid(i+3, 1).GetChar(0) - 'a' + 1;
+				int y = str.Mid(i+4, 1).GetChar(0) - 'a' + 1;
+				panel->MakeMoveSGF(x, y);
+			}
+		}
+	}
+	file.Close();
+	SetSize(panel->boardsize);
+	panel->UpdateBoard();
 }
