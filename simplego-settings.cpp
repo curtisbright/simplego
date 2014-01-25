@@ -95,4 +95,9 @@ void SimpleGoSettingsDialog::UpdateSettings()
 	frame->komi = wxAtof(wxString::Format("%.1f", wxAtof(komi->GetValue())));
 	frame->timeout = wxAtoi(timeout->GetValue());
 	frame->suicide = suicide->GetSelection();
+	
+	if(frame->komi<-1000)
+		frame->komi = -1000;
+	else if(frame->komi>1000)
+		frame->komi = 1000;
 }
