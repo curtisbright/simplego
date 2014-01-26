@@ -385,10 +385,16 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 	bool sizeset = false;
 	wxString str;
 	file.ReadAll(&str);
+	bool inpropvalue = false;
 	int j=0;
 	for(int i=0; i<str.Len(); i++)
-		if(strchr(" \t\r\n\v\f", str.GetChar(i))==NULL)
+	{	if(str.GetChar(i)=='[')
+			inpropvalue = true;
+		else if(inpropvalue && str.GetChar(i)==']' && str.GetChar(i-1)!='\\')
+			inpropvalue = false;
+		if(inpropvalue || strchr(" \t\r\n\v\f", str.GetChar(i))==NULL)
 			str.SetChar(j++, str.GetChar(i));
+	}
 	str.Remove(j);
 	for(int i=0; i<str.Len(); i++)
 	{	wxString substr = str.Mid(i, 3);
