@@ -100,4 +100,6 @@ void SimpleGoSettingsDialog::UpdateSettings()
 		frame->komi = -1000;
 	else if(frame->komi>1000)
 		frame->komi = 1000;
+		
+	frame->sgfload = false;
 }

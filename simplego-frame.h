@@ -50,6 +50,10 @@ public:
 	int timeout;
 	bool suicide;
 	wxString score;
+	bool sgfload;
+	wxString prevblackname;
+	wxString prevwhitename;
+	double prevkomi;
 	void MakeGNUGoMove();
 	void MakeGNUGoScore();
 	void PlaySGF(wxString filename);

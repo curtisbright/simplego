@@ -368,7 +368,13 @@ void SimpleGoPanel::MakeMoveSGF(int x, int y)
 
 // Initialize the current board and history variables
 void SimpleGoPanel::InitGame()
-{	gnugoscore = false;
+{	if(frame->sgfload)
+	{	frame->blackname = frame->prevblackname;
+		frame->whitename = frame->prevwhitename;
+		frame->komi = frame->prevkomi;
+		frame->sgfload = false;
+	}
+	gnugoscore = false;
 	gnugopause = false;
 	curmove = 0;
 	totmove = 0;

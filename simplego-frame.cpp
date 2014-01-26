@@ -86,12 +86,12 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 SimpleGoFrame::~SimpleGoFrame()
 {	wxFileConfig config("simplego", wxEmptyString, wxStandardPaths::Get().GetUserDataDir());
 	config.Write("boardsize", panel->boardsize);
-	config.Write("blackname", blackname);
-	config.Write("whitename", whitename);
+	config.Write("blackname", sgfload ? prevblackname : blackname);
+	config.Write("whitename", sgfload ? prevwhitename : whitename);
 	config.Write("blacklevel", blacklevel);
 	config.Write("whitelevel", whitelevel);
 	config.Write("timeout", timeout);
-	config.Write("komi", komi);
+	config.Write("komi", sgfload ? prevkomi : komi);
 	config.Write("suicide", suicide);
 }
 
@@ -370,6 +370,17 @@ void SimpleGoFrame::SetSize(int boardsize)
 void SimpleGoFrame::PlaySGF(wxString filename)
 {	if(!wxFileExists(filename))
 		return;
+	if(!sgfload)
+	{	prevblackname = blackname;
+		prevwhitename = whitename;
+		prevkomi = komi;
+	}
+	else
+	{	blackname = prevblackname;
+		whitename = prevwhitename;
+		komi = prevkomi;
+		sgfload = false;
+	}
 	wxFile file(filename);
 	bool sizeset = false;
 	wxString str;
@@ -402,8 +413,31 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 				panel->MakeMoveSGF(x, y);
 			}
 		}
+		else if(substr.Cmp("PB[")==0)
+		{	blackname = "";
+			i += 3;
+			while(str.GetChar(i)!=']')
+			{	if(str.GetChar(i)=='\\')
+					i++;
+				blackname += str.GetChar(i++);
+			}
+		}
+		else if(substr.Cmp("PW[")==0)
+		{	whitename = "";
+			i += 3;
+			while(str.GetChar(i)!=']')
+			{	if(str.GetChar(i)=='\\')
+					i++;
+				whitename += str.GetChar(i++);
+			}
+		}
+		else if(substr.Cmp("KM[")==0)
+		{	int len = str.Mid(i+3).Find(']');
+			str.Mid(i+3, len).ToDouble(&komi);
+		}
 	}
 	file.Close();
 	SetSize(panel->boardsize);
 	panel->UpdateBoard();
+	sgfload = true;
 }
