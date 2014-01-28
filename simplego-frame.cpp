@@ -65,7 +65,6 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	Connect(ID_LOAD_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::LoadGame));
 	Connect(ID_SAVE_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::SaveGame));
 	Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::About));
-	Connect(wxEVT_MENU_HIGHLIGHT, wxMenuEventHandler(SimpleGoFrame::Nothing));
 	
 	menubar->Append(gamemenu, wxT("&Game"));
 	menubar->Append(playmenu, wxT("&Play"));
@@ -351,11 +350,6 @@ void SimpleGoFrame::About(wxCommandEvent& event)
 	info.SetDescription("A simple implementation of the game Go\nby Curtis Bright");
 	info.SetWebSite("http://www.curtisbright.com/simplego/");
 	wxAboutBox(info);
-}
-
-// Menu highlight event
-void SimpleGoFrame::Nothing(wxMenuEvent& event)
-{	// Don't clear the status bar
 }
 
 // Set the window size

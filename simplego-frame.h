@@ -33,7 +33,6 @@ private:
 	void LoadGame(wxCommandEvent& event);
 	void SaveGame(wxCommandEvent& event);
 	void About(wxCommandEvent& event);
-	void Nothing(wxMenuEvent& event);
 	void SetSize(int boardsize);
 	~SimpleGoFrame();
 
