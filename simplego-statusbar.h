@@ -11,7 +11,7 @@ private:
 	void OnSize(wxSizeEvent& event);
 public:
 	SimpleGoStatusBar(SimpleGoFrame* parent);
-	void SetTurn(wxString text);
-	void SetMoveNum(wxString text);
-	void SetScore(wxString text);
+	void SetTurn(wxString text, wxString tooltip);
+	void SetMoveNum(wxString text, wxString tooltip);
+	void SetScore(wxString text, wxString tooltip);
 };

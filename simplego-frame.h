@@ -49,6 +49,7 @@ public:
 	int timeout;
 	bool suicide;
 	wxString score;
+	wxString scoretooltip;
 	bool sgfload;
 	wxString prevblackname;
 	wxString prevwhitename;

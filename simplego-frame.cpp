@@ -226,20 +226,24 @@ void SimpleGoFrame::MakeGNUGoScore()
 	panel->ScoreArea(panel->gnugoboard);
 	panel->gnugoscore = true;
 	
-	double fscore = -komi;
+	int blackscore = 0, whitescore = 0;
 	for(int i=1; i<=panel->boardsize; i++)
 		for(int j=1; j<=panel->boardsize; j++)
 			if(panel->gnugoboard[i][j]==BLACK)
-				fscore++;
+				blackscore++;
 			else if(panel->gnugoboard[i][j]==WHITE)
-				fscore--;
-					
+				whitescore++;
+	
+	double fscore = blackscore - whitescore - komi;
+	
 	if(fscore==0)
 		score = "Draw";
 	else if((int)fscore==fscore)
 		score = wxString::Format("%c+%.0f", fscore>0 ? 'B' : 'W', fabs(fscore));
 	else
 		score = wxString::Format("%c+%.1f", fscore>0 ? 'B' : 'W', fabs(fscore));
+		
+	scoretooltip = wxString::Format("Area score: %d-%d", blackscore, whitescore);
 	
 	panel->UpdateBoard();
 }
@@ -265,8 +269,10 @@ void SimpleGoFrame::GetBoard(wxCommandEvent& event)
 void SimpleGoFrame::Settings(wxCommandEvent& event)
 {	SimpleGoSettingsDialog dialog(this);
 	if(dialog.ShowModal()==1)
-		if(!(panel->curmove>=2 && panel->movelist[panel->curmove-1].x==0 && panel->movelist[panel->curmove-2].x==0))
+	{	if(!(panel->curmove>=2 && panel->movelist[panel->curmove-1].x==0 && panel->movelist[panel->curmove-2].x==0))
 			panel->gnugopause = false;
+		panel->UpdateStatus();
+	}
 }
 
 // Pass menu command

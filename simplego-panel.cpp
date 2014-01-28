@@ -36,12 +36,12 @@ void SimpleGoPanel::SpreadArea(char board[21][21], int x, int y, int colour)
 
 // Update turn and move info on status bar
 void SimpleGoPanel::UpdateStatus()
-{	frame->statusbar->SetTurn(wxString::Format("%s", curmove%2==0 ? "Black" : "White"));
-	frame->statusbar->SetMoveNum(wxString::Format("%d", curmove));
+{	frame->statusbar->SetTurn(curmove%2==0 ? "Black" : "White", wxString::Format("%s to move", curmove%2==0 ? frame->blackname : frame->whitename));
+	frame->statusbar->SetMoveNum(wxString::Format("%d", curmove), wxString::Format("Move %d of %d", curmove, totmove));
 	if(gnugoscore)
-		frame->statusbar->SetScore(frame->score);
+		frame->statusbar->SetScore(frame->score, frame->scoretooltip);
 	else
-		frame->statusbar->SetScore("");
+		frame->statusbar->SetScore("", "");
 }
 
 // Remove the group on the given board containing cell (x, y)

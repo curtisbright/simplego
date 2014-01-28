@@ -18,20 +18,23 @@ void SimpleGoStatusBar::OnSize(wxSizeEvent& event)
 	event.Skip();
 }
 
-void SimpleGoStatusBar::SetMoveNum(wxString text)
-{	movenumtext->SetLabel(text);
+void SimpleGoStatusBar::SetMoveNum(wxString text, wxString tooltip)
+{	movenumtext->SetToolTip(tooltip);
+	movenumtext->SetLabel(text);
 	movenumsize = movenumtext->GetSize();
 	movenumtext->Move(fieldrect.x + (fieldrect.width - movenumsize.x) - 3, fieldrect.y + (fieldrect.height - movenumsize.y + 1)/2);
 }
 
-void SimpleGoStatusBar::SetTurn(wxString text)
-{	turntext->SetLabel(text);
+void SimpleGoStatusBar::SetTurn(wxString text, wxString tooltip)
+{	turntext->SetToolTip(tooltip);
+	turntext->SetLabel(text);
 	turnsize = turntext->GetSize();
 	turntext->Move(fieldrect.x + 3, fieldrect.y + (fieldrect.height - turnsize.y + 1)/2);
 }
 
-void SimpleGoStatusBar::SetScore(wxString text)
-{	scoretext->SetLabel(text);
+void SimpleGoStatusBar::SetScore(wxString text, wxString tooltip)
+{	scoretext->SetToolTip(tooltip);
+	scoretext->SetLabel(text);
 	scoresize = scoretext->GetSize();
 	scoretext->Move(fieldrect.x + turnsize.x + (fieldrect.width - turnsize.x - movenumsize.x - scoresize.x)/2, fieldrect.y + (fieldrect.height - scoresize.y + 1)/2);
 }
