@@ -5,9 +5,10 @@ Every Go player who is also a programmer ought to make a Go implementation somet
 
 * Cross-platform GUI using wxWidgets
 * Play against GNU Go on Linux
-* Unlimited undo
+* Unlimited undo/redo
 * Superko enforced
-* Option to allow suicide
+* Board sizes from 2x2 to 19x19
 * Area scoring using GNU Go on Linux (dead groups must be explictly killed on Windows)
 * Load and save SGF files
 * Random mode where play continues until both players have no legal moves
+* Free software released under the WTFPL
