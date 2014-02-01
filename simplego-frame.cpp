@@ -446,4 +446,5 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 	SetSize(panel->boardsize);
 	panel->UpdateBoard();
 	sgfload = true;
+	panel->gnugopause = true;
 }
