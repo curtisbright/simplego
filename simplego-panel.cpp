@@ -150,16 +150,14 @@ void SimpleGoPanel::DrawStone(wxDC& dc, int x, int y, int colour)
 		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x+(x<boardsize?8:0),16*y);
 		dc.DrawLine(16*x,16*y-(y>1?8:1),16*x,16*y+(y<boardsize?8:1));
 		dc.SetBrush(*wxBLACK_BRUSH);
-		dc.DrawCircle(wxPoint(16*x,16*y), 6);
+		dc.DrawCircle(wxPoint(16*x,16*y), 7);
 	}
 	else if(colour==WHITE)
 	{	dc.SetBrush(*wxWHITE_BRUSH);
 		dc.SetPen(*wxBLACK_PEN);
-		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?6:0),16*y);
-		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?6:0));
-		dc.DrawLine(16*x+(x<boardsize?6:0),16*y,16*x+(x<boardsize?8:0),16*y);
-		dc.DrawLine(16*x,16*y+(y<boardsize?6:0),16*x,16*y+(y<boardsize?8:0));
-		dc.DrawCircle(wxPoint(16*x,16*y), 6);
+		dc.DrawLine(16*x-(x>1?8:0),16*y,16*x-(x>1?7:0),16*y);
+		dc.DrawLine(16*x,16*y-(y>1?8:0),16*x,16*y-(y>1?7:0));
+		dc.DrawCircle(wxPoint(16*x,16*y), 7);
 	}
 	else if(colour==AREA(BLACK))
 	{	dc.SetPen(*wxBLACK_PEN);
