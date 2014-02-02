@@ -411,7 +411,7 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 			{	panel->boardsize = 19;
 				panel->InitGame();
 			}
-			if(str.Mid(i+2, 2).Cmp("[]")==0)
+			if(str.Mid(i+2, 2).Cmp("[]")==0 || str.Mid(i+2, 4).Cmp("[tt]")==0)
 				panel->MakePassSGF();
 			else if(str.Mid(i+3, 1).Cmp("a")>=0 && str.Mid(i+3, 1).Cmp("s")<=0 && str.Mid(i+4, 1).Cmp("a")>=0 && str.Mid(i+4, 1).Cmp("s")<=0)
 			{	int x = str.Mid(i+3, 1).GetChar(0) - 'a' + 1;
