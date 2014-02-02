@@ -45,6 +45,7 @@ public:
 	void UpdateBoard();
 	void MakePass();
 	void MakeMove(int x, int y);
+	void MakePassSGF();
 	void MakeMoveSGF(int x, int y);
 	void InitGame();
 	SimpleGoPanel(SimpleGoFrame* parent);

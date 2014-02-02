@@ -412,7 +412,7 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 				panel->InitGame();
 			}
 			if(str.Mid(i+2, 2).Cmp("[]")==0)
-				panel->MakePass();
+				panel->MakePassSGF();
 			else if(str.Mid(i+3, 1).Cmp("a")>=0 && str.Mid(i+3, 1).Cmp("s")<=0 && str.Mid(i+4, 1).Cmp("a")>=0 && str.Mid(i+4, 1).Cmp("s")<=0)
 			{	int x = str.Mid(i+3, 1).GetChar(0) - 'a' + 1;
 				int y = str.Mid(i+4, 1).GetChar(0) - 'a' + 1;
@@ -444,7 +444,10 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 	}
 	file.Close();
 	SetSize(panel->boardsize);
-	panel->UpdateBoard();
+	if(panel->curmove>=2 && panel->movelist[panel->curmove-2].x==0 && panel->movelist[panel->curmove-1].x==0)
+		MakeGNUGoScore();
+	else
+		panel->UpdateBoard();
 	sgfload = true;
 	panel->gnugopause = true;
 }

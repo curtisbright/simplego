@@ -334,6 +334,17 @@ void SimpleGoPanel::MakeMove(int x, int y)
 	}
 }
 
+// Pass the current turn (but don't update the GUI)
+void SimpleGoPanel::MakePassSGF()
+{	curmove++;
+	history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
+	memcpy(history[curmove], board, BOARDMEMORYLEN);
+	movelist = (pos*)realloc(movelist, curmove*sizeof(pos));
+	movelist[curmove-1].x = 0;
+	movelist[curmove-1].y = 0;
+	totmove = curmove;
+}
+
 // Make a move on cell (x, y) according to the SGF move execution rules,
 // and update the current board info and history (but not the GUI)
 void SimpleGoPanel::MakeMoveSGF(int x, int y)
