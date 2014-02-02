@@ -450,4 +450,5 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 		panel->UpdateBoard();
 	sgfload = true;
 	panel->gnugopause = true;
+	playmenu->Check(ID_RANDOM, false);
 }
