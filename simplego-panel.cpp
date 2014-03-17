@@ -247,6 +247,10 @@ void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 	}
 	else if(event.GetKeyCode()=='P'&&!event.AltDown())
 		MakePass();
+	else if(event.GetKeyCode()==WXK_ESCAPE)
+	{	gnugopause = true;
+		frame->playmenu->Check(ID_RANDOM, false);
+	}
 	event.Skip();
 }
 
