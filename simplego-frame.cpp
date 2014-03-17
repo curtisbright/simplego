@@ -395,6 +395,8 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 			inpropvalue = false;
 		if(inpropvalue || strchr(" \t\r\n\v\f", str.GetChar(i))==NULL)
 			str.SetChar(j++, str.GetChar(i));
+		if(!inpropvalue && str.GetChar(i)==')')
+			break;
 	}
 	str.Remove(j);
 	for(int i=0; i<str.Len(); i++)
