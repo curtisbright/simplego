@@ -330,7 +330,8 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 		escblackname.Replace("]", "\\]");
 		escwhitename.Replace("\\", "\\\\");
 		escwhitename.Replace("]", "\\]");
-		file.Write(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]PB[%s]PW[%s]", panel->boardsize, VERSION, escblackname, escwhitename));
+		strftime(str, 15, "%Y-%m-%d", localtime(&rawtime));
+		file.Write(wxString::Format("(;FF[4]GM[1]SZ[%d]AP[Simple Go:%s]PB[%s]PW[%s]DT[%s]", panel->boardsize, VERSION, escblackname, escwhitename, str));
 		if((int)komi==komi)
 			file.Write(wxString::Format("KM[%.0f]", komi));
 		else
