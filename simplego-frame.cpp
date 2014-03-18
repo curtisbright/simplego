@@ -256,7 +256,8 @@ void SimpleGoFrame::NewGame(wxCommandEvent& event)
 
 // Board size... menu command
 void SimpleGoFrame::GetBoard(wxCommandEvent& event)
-{	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
+{	panel->gnugopause = true;
+	int num = wxAtoi(wxGetTextFromUser("Enter the new board size, between 2 and 19:", "New board size", ""));
 	if(num>=2&&num<=19)
 	{	panel->boardsize = num;
 		panel->InitGame();
@@ -267,7 +268,8 @@ void SimpleGoFrame::GetBoard(wxCommandEvent& event)
 
 // Settings... menu command
 void SimpleGoFrame::Settings(wxCommandEvent& event)
-{	SimpleGoSettingsDialog dialog(this);
+{	panel->gnugopause = true;
+	SimpleGoSettingsDialog dialog(this);
 	if(dialog.ShowModal()==1)
 	{	if(!(panel->curmove>=2 && panel->movelist[panel->curmove-1].x==0 && panel->movelist[panel->curmove-2].x==0))
 			panel->gnugopause = false;
@@ -282,7 +284,8 @@ void SimpleGoFrame::Pass(wxCommandEvent& event)
 
 // Go to move... menu command
 void SimpleGoFrame::GoToMove(wxCommandEvent& event)
-{	wxString input = wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "");
+{	panel->gnugopause = true;
+	wxString input = wxGetTextFromUser(wxString::Format("Enter the move number to go to, between 0 and %d:", panel->totmove), "Go to move", "");
 	if(!input.IsSameAs(""))
 	{	int num = wxAtoi(input);
 		if(num>=0 && num<=panel->totmove)
@@ -306,7 +309,8 @@ void SimpleGoFrame::ScoreGame(wxCommandEvent& event)
 
 // Load game... menu command
 void SimpleGoFrame::LoadGame(wxCommandEvent& event)
-{	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+{	panel->gnugopause = true;
+	wxFileDialog LoadDialog(this, "Load Game", "", "", "*.sgf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 	
 	if(LoadDialog.ShowModal()==wxID_OK)
 		PlaySGF(LoadDialog.GetPath());
@@ -321,6 +325,7 @@ void SimpleGoFrame::SaveGame(wxCommandEvent& event)
 	for(int i=2; wxFileExists(str); i++)
 		sprintf(str+6, "-%d.sgf", i);
 	
+	panel->gnugopause = true;
 	wxFileDialog SaveDialog(this, "Save Game", "", str, "*.sgf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 	
 	if(SaveDialog.ShowModal()==wxID_OK)
