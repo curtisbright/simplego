@@ -116,7 +116,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		sprintf(strtime, "%d", timeout);
 		sprintf(strkomi, "%.1f", komi);
 		sprintf(strlevel, "%d", panel->curmove%2 ? whitelevel : blacklevel);
-		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--no-ko", str, "--level", strlevel[0]=='0' ? "10" : strlevel, "--never-resign", "--komi", strkomi, "--clock", strtime, NULL);
+		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", "--positional-superko", str, "--level", strlevel[0]=='0' ? "10" : strlevel, "--never-resign", "--komi", strkomi, "--clock", strtime, NULL);
 	}
 	
 	close(in[0]);
