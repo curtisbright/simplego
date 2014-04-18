@@ -23,7 +23,7 @@ private:
 	void RemoveGroup(char board[21][21], int x, int y);
 	bool HasLibertiesRec(char board[21][21], int x, int y);
 	bool HasLiberties(char board[21][21], int x, int y);
-	bool ValidMove(char board[21][21], int x, int y);
+	bool ValidMove(char board[21][21], int x, int y, int colour);
 	void Paint(wxPaintEvent& event);
 	void DrawStone(wxDC& dc, int x, int y, int colour);
 	void DrawBoard(wxDC& dc, char board[21][21]);

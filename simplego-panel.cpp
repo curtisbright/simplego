@@ -81,13 +81,12 @@ bool SimpleGoPanel::HasLiberties(char board[21][21], int x, int y)
 	return HasLibertiesRec(temp, x, y);
 }
 
-// Determine if a move at cell (x, y) is valid on the given board
-bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y)
+// Determine if a move at cell (x, y) with given colour is valid on the given board
+bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, int colour)
 {	if(board[x][y]!=EMPTY)
 		return false;
 		
-	board[x][y] = curmove%2+1;
-	int colour = board[x][y];
+	board[x][y] = colour;
 	int oppcolour = OPP(colour);
 
 	if(board[x-1][y]==oppcolour && !HasLiberties(board, x-1, y))
@@ -204,7 +203,7 @@ void SimpleGoPanel::Idle(wxIdleEvent& event)
 			y = 1+rand()%boardsize;
 		}
 		memcpy(temp, board, BOARDMEMORYLEN);
-		if(ValidMove(temp, x, y))
+		if(ValidMove(temp, x, y, curmove%2+1))
 		{	MakeMove(x, y);
 			#ifdef __WXMSW__
 			event.RequestMore();
@@ -308,7 +307,7 @@ void SimpleGoPanel::MakeMove(int x, int y)
 	char temp[21][21];
 	memcpy(temp, board, BOARDMEMORYLEN);
 	
-	if(ValidMove(temp, x, y))
+	if(ValidMove(temp, x, y, curmove%2+1))
 	{	board[x][y] = curmove%2+1;
 		wxClientDC dc(this);
 		DrawStone(dc, x, y, curmove%2+1);
