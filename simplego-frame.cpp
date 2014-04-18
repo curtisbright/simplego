@@ -169,58 +169,60 @@ void SimpleGoFrame::MakeGNUGoScore()
 	memcpy(panel->gnugoboard, panel->board, BOARDMEMORYLEN);
 
 	#ifndef __WXMSW__
-	pipe(in);
-	pipe(out);
+	if(panel->ValidMoveExists())
+	{	pipe(in);
+		pipe(out);
 
-	if(fork()==0)
-	{	close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		dup2(in[0], STDIN_FILENO);
-		dup2(out[1], STDOUT_FILENO);
-		close(in[1]);
-		close(out[0]);
-		struct rlimit limit;
-		limit.rlim_cur = timeout;
-		setrlimit(RLIMIT_CPU, &limit);
-		sprintf(str, "--%s-suicide", suicide ? "allow" : "forbid");
-		execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", str, NULL);
-	}
-	
-	close(in[0]);
-	close(out[1]);
-
-	sprintf(str, "boardsize %d\n", panel->boardsize);
-	write(in[1], str, strlen(str));
-	while(read(out[0], buf, 1) && buf[0] != '=');
-
-	for(int i=1; i<=panel->boardsize; i++)
-		for(int j=1; j<=panel->boardsize; j++)
-			if(panel->board[i][j]!=EMPTY)
-			{	sprintf(str, "play %s %c%d\n", panel->board[i][j]==WHITE ? "white" : "black", i+'A'-1+(i>8 ? 1 : 0), (panel->boardsize+1)-j);
-				write(in[1], str, strlen(str));
-				while(read(out[0], buf, 1) && buf[0] != '=');
-			}
-
-	sprintf(str, "final_status_list dead\n");
-	write(in[1], str, strlen(str));
-	
-	close(in[1]);
-
-	while(read(out[0], buf, 1))
-		if(buf[0] == '=')
-		{	while(n = read(out[0], buf, 255))
-			{	buf[n] = '\0';
-				strcat(data, buf);
-			}
-			for(int i=0; i<(int)strlen(data)-1; i++)
-				if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
-				{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
-					int y = (panel->boardsize+1)-atoi(data+i+1);
-					panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
-				}
+		if(fork()==0)
+		{	close(STDIN_FILENO);
+			close(STDOUT_FILENO);
+			dup2(in[0], STDIN_FILENO);
+			dup2(out[1], STDOUT_FILENO);
+			close(in[1]);
+			close(out[0]);
+			struct rlimit limit;
+			limit.rlim_cur = timeout;
+			setrlimit(RLIMIT_CPU, &limit);
+			sprintf(str, "--%s-suicide", suicide ? "allow" : "forbid");
+			execlp("gnugo", "gnugo", "--mode", "gtp", "--chinese-rules", str, NULL);
 		}
-	
-	close(out[0]);
+		
+		close(in[0]);
+		close(out[1]);
+
+		sprintf(str, "boardsize %d\n", panel->boardsize);
+		write(in[1], str, strlen(str));
+		while(read(out[0], buf, 1) && buf[0] != '=');
+
+		for(int i=1; i<=panel->boardsize; i++)
+			for(int j=1; j<=panel->boardsize; j++)
+				if(panel->board[i][j]!=EMPTY)
+				{	sprintf(str, "play %s %c%d\n", panel->board[i][j]==WHITE ? "white" : "black", i+'A'-1+(i>8 ? 1 : 0), (panel->boardsize+1)-j);
+					write(in[1], str, strlen(str));
+					while(read(out[0], buf, 1) && buf[0] != '=');
+				}
+
+		sprintf(str, "final_status_list dead\n");
+		write(in[1], str, strlen(str));
+		
+		close(in[1]);
+
+		while(read(out[0], buf, 1))
+			if(buf[0] == '=')
+			{	while(n = read(out[0], buf, 255))
+				{	buf[n] = '\0';
+					strcat(data, buf);
+				}
+				for(int i=0; i<(int)strlen(data)-1; i++)
+					if(data[i]>='A' && data[i]<='T' && data[i+1]>='1' && data[i+1]<='9')
+					{	int x = data[i]-'A'+1-(data[i]>'H' ? 1 : 0);
+						int y = (panel->boardsize+1)-atoi(data+i+1);
+						panel->gnugoboard[x][y] = OPP(panel->board[x][y]);
+					}
+			}
+		
+		close(out[0]);
+	}
 	#endif
 	
 	panel->ScoreArea(panel->gnugoboard);

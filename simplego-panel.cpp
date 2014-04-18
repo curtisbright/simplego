@@ -251,6 +251,23 @@ void SimpleGoPanel::KeyDown(wxKeyEvent& event)
 	event.Skip();
 }
 
+// Determine if any valid moves are possible for either player
+bool SimpleGoPanel::ValidMoveExists()
+{	char temp[21][21];
+	
+	for(int i=1; i<=boardsize; i++)
+		for(int j=1; j<=boardsize; j++)
+		{	memcpy(temp, board, BOARDMEMORYLEN);
+			if(ValidMove(temp, i, j, BLACK))
+				return true;
+			memcpy(temp, board, BOARDMEMORYLEN);
+			if(ValidMove(temp, i, j, WHITE))
+				return true;
+		}
+	
+	return false;
+}
+
 // Fill empty cells on the given board with the colour who owns that area
 void SimpleGoPanel::ScoreArea(char board[21][21])
 {	for(int i=1; i<=boardsize; i++)

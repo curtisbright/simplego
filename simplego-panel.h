@@ -40,6 +40,7 @@ public:
 	char gnugoboard[21][21];	// GNU Go board report
 	bool gnugoscore;
 	bool gnugopause;
+	bool ValidMoveExists();
 	void ScoreArea(char board[21][21]);
 	void UpdateStatus();
 	void UpdateBoard();
