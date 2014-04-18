@@ -82,7 +82,7 @@ bool SimpleGoPanel::HasLiberties(char board[21][21], int x, int y)
 }
 
 // Determine if a move at cell (x, y) is valid on the given board
-bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, bool checkdupes)
+bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y)
 {	if(board[x][y]!=EMPTY)
 		return false;
 		
@@ -104,11 +104,9 @@ bool SimpleGoPanel::ValidMove(char board[21][21], int x, int y, bool checkdupes)
 		RemoveGroup(board, x, y);
 		
 	bool dupe = false;
-	if(checkdupes)
-	{	for(int i=0; i<=curmove; i++)
-			if(memcmp(board, history[i], BOARDMEMORYLEN)==0)
-				dupe = true;
-	}
+	for(int i=0; i<=curmove; i++)
+		if(memcmp(board, history[i], BOARDMEMORYLEN)==0)
+			dupe = true;
 	
 	return !dupe;
 }
@@ -206,7 +204,7 @@ void SimpleGoPanel::Idle(wxIdleEvent& event)
 			y = 1+rand()%boardsize;
 		}
 		memcpy(temp, board, BOARDMEMORYLEN);
-		if(ValidMove(temp, x, y, true))
+		if(ValidMove(temp, x, y))
 		{	MakeMove(x, y);
 			#ifdef __WXMSW__
 			event.RequestMore();
@@ -310,7 +308,7 @@ void SimpleGoPanel::MakeMove(int x, int y)
 	char temp[21][21];
 	memcpy(temp, board, BOARDMEMORYLEN);
 	
-	if(ValidMove(temp, x, y, true))
+	if(ValidMove(temp, x, y))
 	{	board[x][y] = curmove%2+1;
 		wxClientDC dc(this);
 		DrawStone(dc, x, y, curmove%2+1);
