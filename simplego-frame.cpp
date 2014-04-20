@@ -422,6 +422,7 @@ void SimpleGoFrame::PlaySGF(wxString filename)
 		{	if(!sizeset)
 			{	panel->boardsize = 19;
 				panel->InitGame();
+				sizeset = true;
 			}
 			if(str.Mid(i+2, 2).Cmp("[]")==0 || str.Mid(i+2, 4).Cmp("[tt]")==0)
 				panel->MakePassSGF();
