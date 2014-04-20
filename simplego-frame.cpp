@@ -53,6 +53,8 @@ SimpleGoFrame::SimpleGoFrame(const wxString& title, const wxPoint& pos, const wx
 	
 	#ifdef __WXMSW__
 	playmenu->Enable(ID_GNUGO, false);
+	#else
+	signal(SIGCHLD, SIG_IGN);
 	#endif
 	
 	Connect(ID_NEW_GAME, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(SimpleGoFrame::NewGame));
