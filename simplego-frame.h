@@ -48,6 +48,7 @@ public:
 	double komi;
 	int timeout;
 	bool suicide;
+	bool madesuicide;
 	wxString score;
 	wxString scoretooltip;
 	bool sgfload;

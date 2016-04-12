@@ -114,7 +114,7 @@ void SimpleGoFrame::MakeGNUGoMove()
 		dup2(out[1], STDOUT_FILENO);
 		close(in[1]);
 		close(out[0]);
-		sprintf(str, "--%s-suicide", suicide ? "allow" : "forbid");
+		sprintf(str, "--%s-suicide", suicide || madesuicide ? "allow" : "forbid");
 		sprintf(strtime, "%d", timeout);
 		sprintf(strkomi, "%.1f", komi);
 		sprintf(strlevel, "%d", panel->curmove%2 ? whitelevel : blacklevel);

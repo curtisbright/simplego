@@ -334,6 +334,9 @@ void SimpleGoPanel::MakeMove(int x, int y)
 					if(temp[i][j]!=board[i][j])
 						DrawStone(dc, i, j, temp[i][j]);
 			memcpy(board, temp, BOARDMEMORYLEN);
+
+			if(board[x][y] == EMPTY)
+				frame->madesuicide = true;
 		}
 		
 		if(gnugoscore)
@@ -382,7 +385,9 @@ void SimpleGoPanel::MakeMoveSGF(int x, int y)
 	if(board[x][y-1]==oppcolour && !HasLiberties(board, x, y-1))
 		RemoveGroup(board, x, y-1);
 	if(!HasLiberties(board, x, y))
-		RemoveGroup(board, x, y);
+	{	RemoveGroup(board, x, y);
+		frame->madesuicide = true;
+	}
 	
 	curmove++;
 	history = (char(*)[21][21])realloc(history, (curmove+1)*BOARDMEMORYLEN);
@@ -401,6 +406,7 @@ void SimpleGoPanel::InitGame()
 		frame->komi = frame->prevkomi;
 		frame->sgfload = false;
 	}
+	frame->madesuicide = false;
 	gnugoscore = false;
 	gnugopause = false;
 	curmove = 0;
